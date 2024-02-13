@@ -28,7 +28,7 @@ if(!dir.exists(finalFigDir)){
   dir.create(finalFigDir)
 }
 
-fountains<-import(paste0(fountainsDir,"/all_fountains_240125.bed"))
+fountains<-import(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.bed"))
 chrRegions<-readRDS(paste0(publicDataDir,"/chr_regions_Rockman2009.RDS"))
 
 
@@ -48,7 +48,7 @@ p1<-ggplot(chrdf,aes(x=name,y=end))+
   geom_rect(data = fountdf, aes(xmin = as.numeric(name) - 0.2,
                                 xmax = as.numeric(name) + 0.2,
                                 ymax = end, ymin = start),
-            col="#00008baa",linewidth=0.1)
+            col="#00008b66",linewidth=0.1)
 p1
 
 
@@ -93,7 +93,7 @@ table(tls1$name)
 #84     91      9
 
 # get fountain count per Mb by region
-tls1$fountain_count<-countOverlaps(tls1,fount)
+tls1$fountain_count<-countOverlaps(tls1,fountains)
 
 fountPerMb<-data.frame(tls1)
 fountPerMb$seqnames<-factor(fountPerMb$seqnames)

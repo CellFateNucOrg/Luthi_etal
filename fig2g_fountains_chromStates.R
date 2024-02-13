@@ -9,9 +9,7 @@ library(RColorBrewer)
 theme_set(
   theme_bw()+
     theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.title.y=ggtext::element_markdown(),
-          axis.title.x=ggtext::element_markdown())
+          panel.grid.minor = element_blank())
 )
 
 
@@ -24,22 +22,9 @@ if(!dir.exists(finalFigDir)){
   dir.create(finalFigDir)
 }
 
-fountains<-readRDS(paste0(fountainsDir,"/detected_fountains_equalQ.RDS"))
-rnaSeqFile<-paste0(rnaSeqPath,"/rds/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_DESeq2_fullResults.rds")
+fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.rds"))
+rnaSeqFile<-paste0(rnaSeqDir,"/rds/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_DESeq2_fullResults.rds")
 
-
-# # fixing bad QAsymetry values with 240 in Q5 and only 8 in Q6
-# fountains<-readRDS(paste0(fountainsDir,"/detected_fountains.RDS"))
-# table(fountains$QAsymetry)
-# toRedistribute<-sum(table(fountains$QAsymetry)[c(5,6)])/2-table(fountains$QAsymetry)[c(6)]
-# set.seed=10112023
-# idx<-sample(x=1:table(fountains$QAsymetry)[c(5)],size=toRedistribute,replace=F)
-# fountains$QAsymetry[fountains$QAsymetry==5][idx]<-6
-# table(fountains$QAsymetry)
-# saveRDS(fountains,paste0(fountainsDir,"/detected_fountains_equalQ.RDS"))
-
-
-fountains$fountainName<-paste0("fount",1:length(fountains))
 regionType="fountains"
 
 
@@ -189,11 +174,11 @@ table(tiles$binnedDistance,tiles$fountainLocation)
 
 listdf<-list()
 for(l in levels(tiles$fountainLocation)){
-  for(a in levels(tiles$QAsymetry)){
+  for(a in levels(tiles$AsymmetryQuintile)){
     for(d in levels(tiles$binnedDistance)[1:6]){
-      df1<-getStateOLtable(gr=tiles[tiles$fountainLocation==l & tiles$QAsymetry==a & tiles$binnedDistance==d],states)
+      df1<-getStateOLtable(gr=tiles[tiles$fountainLocation==l & tiles$AsymmetryQuintile==a & tiles$binnedDistance==d],states)
       df1$fountainLocation<-l
-      df1$QAsymetry<-a
+      df1$AsymmetryQuintile<-a
       df1$binnedDistance<-d
       listdf[[paste0(l,"_",a,"_",d)]]<-df1
     }
@@ -213,35 +198,46 @@ boxdf<-df %>% dplyr::filter(XvA=="A") %>%
   dplyr::group_by(binnedDistance) %>%
   dplyr::mutate(stateWidth=sum(stateWidth),stateFrequency=sum(stateFrequency)) %>%
   dplyr::filter(binnedDistance=="0") %>%
-  dplyr::select(-QAsymetry,-state,-fountainLocation) %>%
+  dplyr::select(-AsymmetryQuintile,-state,-fountainLocation) %>%
   dplyr::distinct()
 
 p1<-ggplot(df[df$XvA=="A",],
-           aes(x=binnedDistance,y=stateWidth,fill=state)) +
+           aes(x=binnedDistance,y=stateWidth/1e6,fill=state)) +
   geom_bar(position="stack",stat="identity") +
   scale_fill_manual(values=stateClrs) +
-  theme_bw() + xlab("Binned distance (kb)")+
-  theme(legend.position = "none") +
-  ggtitle(paste0("Chromatin state width in autosomal fountains"))
+  theme(legend.position = "none",
+        title =element_text(size=5),
+        axis.title = element_text(size=10)) +
+  ggtitle(paste0("Chromatin state width in autosomal fountains")) +
+  ylab(expression(paste("Bins coverage x",10^6," bp"))) +
+  xlab(paste0("Fountains (n=",length(fountains),")"))
 p1
 
 
 
-#### genome wide distribution
+
+
+
+
+
+#### genome wide distribution of chromatin states (autosomes)
 tile<-unlist(tileGenome(seqlengths(Celegans),tilewidth = 2000))
 ddff<-getStateOLtable(tile,states)
 ddff$bin2kb<-factor(0)
 p2<-ggplot(ddff[ddff$XvA=="A",],
-           aes(x=bin2kb,y=stateWidth,fill=state)) +
+           aes(x=bin2kb,y=stateWidth/1e7,fill=state)) +
   geom_col(position="stack") +
   scale_fill_manual(values=stateClrs) +
-  theme_bw() +
-  theme(legend.position = "none") +
-  ggtitle(paste0("ChrA"))
+  theme(legend.position = "none",
+        title =element_text(size=5),
+        axis.title = element_text(size=10)) +
+  ggtitle(paste0("ChrA")) +
+  ylab(expression(paste("Genome-wide coverage x",10^7," bp"))) +
+  xlab("")
 
 p2
 
-p<-ggpubr::ggarrange(p1,p2,ncol=2,widths=c(1,0.3))
+p<-ggpubr::ggarrange(p1,p2,ncol=2,widths=c(0.7,0.3))
 ggsave(paste0(finalFigDir,"/fig2g_fountains_chromStates.pdf"), p, device="pdf",
-       width=15,height=8, units="cm")
+       width=8,height=8, units="cm")
 
