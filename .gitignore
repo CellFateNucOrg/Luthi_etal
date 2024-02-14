@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+RNAseq_DGE/salmon/*/aux_info
+RNAseq_DGE/salmon/*/logs
+RNAseq_DGE/salmon/*/libParams
+RNAseq_DGE/salmon/*/abundance.h5
+RNAseq_DGE/salmon/*/lib_format_counts.json
+RNAseq_DGE/salmon/*/cmd_info.json
+.DS_Store
