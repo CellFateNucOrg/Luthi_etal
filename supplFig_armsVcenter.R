@@ -138,6 +138,6 @@ p3
 # Assemble final figure ------
 p<-ggarrange(p4,p1,p2,p3,nrow=2,ncol=2, labels=c("A ","C ","B ","D "),widths=c(1,0.6,1,0.6))
 p<-annotate_figure(p, top = text_grob("Isiaka et al., Supplementary Figure ", size = 14))
-ggsave(paste0(finalFigDir,"/FountainsPer",regionSize/1e6,"Mb_armsVCenter.pdf"),p,width=19,height=19,
+ggsave(paste0(finalFigDir,"/supplFig_FountainsPer",regionSize/1e6,"Mb_armsVCenter.pdf"),p,width=19,height=19,
 device="pdf",units="cm")
 
