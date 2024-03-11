@@ -58,7 +58,6 @@ count_data <- function (y,ymax=5){
 }
 
 
-
 #Genome Res. 2017 Dec;27(12):2096-2107.
 # doi: 10.1101/gr.226233.117. Epub 2017 Nov 15.
 # Chromatin accessibility dynamics reveal novel functional enhancers in C. elegans

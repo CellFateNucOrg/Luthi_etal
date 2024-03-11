@@ -198,6 +198,7 @@ stat_df
 
 
 p<-ggarrange(p1,p2,p3,nrow=3)
+p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
 ggsave(filename=paste0(finalFigDir,"/supplFig_fountainExpression_2kb_bins.pdf"),
        p, device="pdf",height=29,width=19, units="cm")
 

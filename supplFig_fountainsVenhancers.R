@@ -18,7 +18,8 @@ theme_set(
           text=element_text(size=9),
           plot.title=element_text(size=9),
           axis.title=element_text(size=9),
-          strip.text=element_text(size=9)
+          strip.text=element_text(size=9),
+          legend.title=element_text(size=9)
     )
 )
 
@@ -64,6 +65,15 @@ dd1<-data.frame(daughertyL3) %>%
 dd1$type<-factor(dd1$L3_chromHMMState, levels=c("L3_activeEnhancer" ,"L3_repressedEnhancer","L3_H3K27me3Repressed"))
 levels(dd1$type)<-c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer")
 
+# to get some stats
+dd2<-dd1 %>%
+  dplyr::group_by(type) %>%
+  dplyr::summarise(ecd10kb=ecdf(distanceToFount)(c(10000)),
+                   ecd50kb=ecdf(distanceToFount)(c(50000)),
+                   bracket1=distanceToFount[which.min(abs(ecd-0.6))],
+                   bracket2=distanceToFount[which.min(abs(ecd-0.63))],
+                   count=n())
+
 dd1$type_count<-dd1$type
 levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer"),
                                paste0(" (n=",dd2$count,")"))
@@ -75,16 +85,9 @@ p1<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,color=type_count)) +
   coord_cartesian(xlim=c(1,150000/1000)) +
   geom_hline(yintercept=1,colour="darkgrey") +
   theme(legend.title=element_blank(), legend.position=c(0.7,0.5)) +
-  ggtitle("Daugherty et al. (2017) L3 enhancers")
+  ggtitle("L3 enhancers (Daugherty et al. 2017)")
 
-# to get fraction between 0.15 and 0.5 lfc
-dd2<-dd1 %>%
-  dplyr::group_by(type) %>%
-  dplyr::summarise(ecd10kb=ecdf(distanceToFount)(c(10000)),
-                   ecd50kb=ecdf(distanceToFount)(c(50000)),
-                   bracket1=distanceToFount[which.min(abs(ecd-0.6))],
-                   bracket2=distanceToFount[which.min(abs(ecd-0.63))],
-                   count=n())
+
 # add 10kb quantile
 p1<-p1+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
                      yend=-Inf,linetype="dashed",colour="grey") +
@@ -92,7 +95,7 @@ p1<-p1+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
                xend=10,yend=dd2$ecd10kb[dd2$type=="Active enhancer"],
                linetype="dashed",colour="grey") +
   annotate(geom="text",x=11,y=0,label="10kb",color="darkgrey",hjust=0,size=3)+
-  annotate(geom="text",x=0,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
+  annotate(geom="text",x=1,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
            label=paste0(round((dd2$ecd10kb[dd2$type=="Active enhancer"])*100,0),"%"),
            color="darkgrey",vjust=0,size=3)
 # add pvalues
@@ -103,12 +106,13 @@ ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enha
 p1<-p1+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
                      xmax=as.numeric(dd2[2,"bracket1"]/1000),
                      y.position=0.6, label="****",inherit.aes=F, bracket.nudge.y=0.02,
-                     tip.length=0.02,vjust=0.75,label.size=3) +
+                     tip.length=0.02,vjust=0.75,hjust=0.4,label.size=3) +
   geom_bracket(xmin=as.numeric(dd2[2,"bracket2"]/1000),
                xmax=as.numeric(dd2[3,"bracket2"]/1000),
                y.position=0.63, label="ns",inherit.aes=F, bracket.nudge.y=0.02,
-               tip.length=0.02,vjust=0.2,label.size=3)
+               tip.length=0.02,vjust=0.2,hjust=0.2,label.size=3)
 
+p1
 
 
 # Number of enhancers per bin -------
@@ -133,18 +137,31 @@ df1$type<-gsub("Count$","",df1$type)
 df1$type<-factor(df1$type,levels=c("Active", "Repressed","H3K27meRepressed"))
 levels(df1$type)<-c("Active", "Repressed","H3K27me3")
 
-p2<-ggplot(df1,aes(x=count,fill=type)) +
-  geom_bar(position=position_dodge(preserve = "single")) +
-  facet_wrap(.~fountVcont) +
-  scale_fill_manual(values=c("red","blue","darkgreen")) +
-  xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
-  ylab(paste0("Number of ",binSize/1000,"kb bins"))+
-  theme(legend.title=element_blank(), legend.position=c(0.8,0.7),
+# p2<-ggplot(df1,aes(x=count,fill=type)) +
+#   geom_bar(position=position_dodge(preserve = "single")) +
+#   facet_wrap(.~fountVcont) +
+#   scale_fill_manual(values=c("red","blue","darkgreen")) +
+#   xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
+#   ylab(paste0("Number of ",binSize/1000,"kb bins"))+
+#   theme(legend.title=element_blank(), legend.position=c(0.8,0.7),
+#         legend.key.size = unit(0.3, 'cm'))+
+#   ggtitle("L3 enhancers (Daugherty et al. 2017)")
+
+df1$fountVcont<-factor(df1$fountVcont, levels=c("control","fountain tip"))
+levels(df1$fountVcont)<-c("control","fountain\ntip")
+
+p2<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
+  geom_bar(position = position_fill(reverse = TRUE),color="black",linewidth=0.1) +
+  facet_wrap(.~type) +
+  scale_fill_grey(paste0("Enhancers\nper ",binSize/1000,"kb bin"),start=1,end=0) +
+  xlab(paste0(""))+
+  ylab(paste0("Fraction of ",binSize/1000,"kb bins"))+
+  theme(legend.title=element_text(size=8,angle=0),
+        legend.position="right",
         legend.key.size = unit(0.3, 'cm'))+
-  ggtitle("Daugherty et al. (2017) L3 enhancers")
-
-
-
+  #guides(fill=guide_legend(title.position="left",title.vjust=0))+
+  ggtitle("L3 enhancers (Daugherty et al. 2017)")
+p2
 
 #########################-
 # Jaenes ATAC enhancers -----
@@ -153,7 +170,7 @@ p2<-ggplot(df1,aes(x=count,fill=type)) +
 
 # enhancers
 JaenesL<-readRDS(paste0(publicDataDir,"/Jaenes2018_enhancers_ce11_stages_chromHMM.rds"))
-JaenesL<-JaenesL%>% filter(maxStage!="emb",maxStage!="l4",maxStage!="ya", topState_L3_chromHMM %in% c("Active enhancer","H3K27me3 repressed","Repressed enhancer"))
+JaenesL<-JaenesL%>% filter(maxStage!="emb",maxStage!="ya", topState_L3_chromHMM %in% c("Active enhancer","H3K27me3 repressed","Repressed enhancer"))
 length(JaenesL)
 #2725 l1-l3
 #all larval 3903
@@ -178,6 +195,7 @@ dd2<-dd1 %>%
                    bracket1=distanceToFount[which.min(abs(ecd-0.6))],
                    bracket2=distanceToFount[which.min(abs(ecd-0.63))],
                    count=n())
+
 dd1$type_count<-dd1$type
 levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer"),
        paste0(" (n=",dd2$count,")"))
@@ -191,7 +209,7 @@ p3<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,color=type_count)) +
   coord_cartesian(xlim=c(1,150000/1000)) +
   geom_hline(yintercept=1,colour="darkgrey") +
   theme(legend.title=element_blank())+
-  ggtitle("L1-L3 enhancers (Jaenes et al. 2018)")
+  ggtitle("Larval enhancers (Jaenes et al. 2018)")
 
 
 
@@ -202,7 +220,7 @@ p3<-p3+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
                xend=10,yend=dd2$ecd10kb[dd2$type=="Active enhancer"],
                linetype="dashed",colour="grey") +
   annotate(geom="text",x=11,y=0,label="10kb",color="darkgrey",hjust=0,size=3)+
-  annotate(geom="text",x=0,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
+  annotate(geom="text",x=1,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
            label=paste0(round((dd2$ecd10kb[dd2$type=="Active enhancer"])*100,0),"%"),
            color="darkgrey",vjust=0,size=3)
 # add pvalues
@@ -214,12 +232,12 @@ p3<-p3+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
                      xmax=as.numeric(dd2[2,"bracket1"]/1000),
                      y.position=0.6, label="****",inherit.aes=F,
                      bracket.nudge.y=0.02, label.size=3,
-                     tip.length=0.02,vjust=0.75) +
+                     tip.length=0.02,vjust=0.75,hjust=0.4) +
   geom_bracket(xmin=as.numeric(dd2[2,"bracket2"]/1000),
                xmax=as.numeric(dd2[3,"bracket2"]/1000),
                y.position=0.63, label="ns",inherit.aes=F,
                bracket.nudge.y=0.02, label.size=3,
-               tip.length=0.02,vjust=0.2)
+               tip.length=0.02,vjust=0.2,hjust=0.2)
 
 p3
 
@@ -245,22 +263,41 @@ df1$type<-gsub("Count$","",df1$type)
 df1$type<-factor(df1$type,levels=c("Active", "Repressed","H3K27meRepressed"))
 levels(df1$type)<-c("Active", "Repressed","H3K27me3")
 
-p4<-ggplot(df1,aes(x=count,fill=type)) +
-  geom_bar(position=position_dodge(preserve = "single")) +
-  facet_wrap(.~fountVcont) +
-  scale_fill_manual(values=c("red","blue","darkgreen")) +
-  xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
-  ylab(paste0("Number of ",binSize/1000,"kb bins")) +
-  ggtitle("L1-L3 enhancers (Jaenes et al. 2018)") +
-  theme(legend.title=element_blank(), legend.position=c(0.8,0.6),
-        legend.key.size = unit(0.3, 'cm'))
+df1$fountVcont<-factor(df1$fountVcont, levels=c("control","fountain tip"))
+levels(df1$fountVcont)<-c("control","fountain\ntip")
+
+# p4<-ggplot(df1,aes(x=count,fill=type)) +
+#   geom_bar(position=position_dodge(preserve = "single")) +
+#   facet_wrap(.~fountVcont) +
+#   scale_fill_manual(values=c("red","blue","darkgreen")) +
+#   xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
+#   ylab(paste0("Number of ",binSize/1000,"kb bins")) +
+#   ggtitle("L1-L3 enhancers (Jaenes et al. 2018)") +
+#   theme(legend.title=element_blank(), legend.position=c(0.8,0.6),
+#         legend.key.size = unit(0.3, 'cm'))
+
+p4<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
+  geom_bar(position = position_fill(reverse = TRUE),color="black",linewidth=0.1) +
+  facet_wrap(.~type) +
+  scale_fill_grey(paste0("Enhancers\nper ",binSize/1000,"kb bin"),start=1,end=0) +
+  xlab(paste0(""))+
+  ylab(paste0("Fraction of ",binSize/1000,"kb bins"))+
+  theme(legend.title=element_text(size=8,angle=0),
+        legend.position="right",
+        legend.key.size = unit(0.3, 'cm'))+
+  #guides(fill=guide_legend(title.position="left",title.vjust=0,title.hjust=1))+
+  ggtitle("Larval enhancers (Jaenes et al. 2018)")
+p4
+
 
 
 #p<-ggpubr::ggarrange(p1,p3,
 #                     ggpubr::ggarrange(p2,p4,ncol=2,nrow=1),nrow=3,ncol=1)
 
-p<-cowplot::plot_grid(p1,p2,p3,p4,nrow=2,ncol=2)
-ggsave(paste0(finalFigDir,"/supplFigg_fountainsVenhancers.pdf"), p, device="pdf",
+p<-cowplot::plot_grid(p1,p2,p3,p4,nrow=2,ncol=2,rel_widths=c(0.9,1,0.9,1),labels=c("a ","b ","c ", "d "),
+                      align = "v",axis="tb")
+p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
+ggsave(paste0(finalFigDir,"/supplFig_fountainsVenhancers.pdf"), p, device="pdf",
        width=19,height=18, units="cm")
 
 

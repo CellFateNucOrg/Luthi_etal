@@ -227,6 +227,7 @@ p3
 
 
 p<-ggarrange(p1,p2,p3,nrow=3)
+p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
 ggsave(filename=paste0(finalFigDir,"/supplFig2_fountainAsymmetry.pdf"),
        p, device="pdf",height=29,width=15, units="cm")
 
