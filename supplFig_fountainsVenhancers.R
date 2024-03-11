@@ -10,6 +10,7 @@ library(dplyr)
 library(tidyr)
 library(ggtext)
 library(cowplot)
+library(ggbeeswarm)
 
 theme_set(
   theme_bw(base_size=9)+
@@ -17,7 +18,8 @@ theme_set(
           panel.grid.minor = element_blank(),
           text=element_text(size=9),
           plot.title=element_text(size=9),
-          axis.title=element_text(size=9),
+          axis.title.y=ggtext::element_markdown(size=9),
+          axis.title.x=ggtext::element_markdown(size=9),
           strip.text=element_text(size=9),
           legend.title=element_text(size=9)
     )
@@ -39,6 +41,8 @@ source(paste0(projectDir,"/functions_fountainPlots.R"))
 
 fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.rds"))
 colnames(mcols(fountains))[colnames(mcols(fountains))=="name"]<-"fountainName"
+rnaSeqFile<-paste0(rnaSeqDir,"/rds/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_DESeq2_fullResults.rds")
+
 
 # control bins
 nonFount<-gaps(fountains)
@@ -327,18 +331,63 @@ p4
 
 
 
+
+##############
+## number of enhancers per bin vs LFC
+##############
+# enhancers
+daughertyL3<-readRDS(paste0(publicDataDir,"/daugherty2017_L3Enhancers_ce11.rds"))
+
+binSize=6000
+fountains$fountVcont<-"fountain tip"
+#nonFount$fountVcont<-"control"
+
+allRegions<-fountains
+allRegions<-resize(allRegions,width=binSize,fix="center")
+
+allRegions$ActiveCount<-countOverlaps(allRegions,daughertyL3[daughertyL3$L3_chromHMMState=="L3_activeEnhancer"],ignore.strand=T,minoverlap=1)
+
+salmon<-readRDS(rnaSeqFile)
+salmon<-salmon[!is.na(salmon$chr),]
+salmonGR<-GRanges(salmon)
+ol<-findOverlaps(salmonGR,allRegions,ignore.strand=T)
+
+salmonGR$ActiveCount<-0
+salmonGR$ActiveCount[queryHits(ol)]<-allRegions$ActiveCount[subjectHits(ol)]
+
+df<-data.frame(salmonGR)
+df$ActiveCount<-factor(df$ActiveCount)
+
+#ggplot(data=df[df$ActiveCount!=0,],aes(x=ActiveCount,y=log2FoldChange,fill=ActiveCount)) + geom_beeswarm() +
+#  geom_hline(yintercept=0) + scale_fill_grey(start=1,end=0.4)
+
+
+#' Function for adding count data to plots
+count_data <- function (y,ymax=5){
+  df <- data.frame(y = ymax, label = length(y))
+  return(df)
+}
+
+
+p5<-ggplot(data=df,aes(x=ActiveCount,y=log2FoldChange)) +
+  geom_jitter(width=0.2,size=1,aes(color=ActiveCount)) +
+  geom_boxplot(outlier.shape=NA,fill=NA,width=0.3) +
+  geom_hline(yintercept=0,color="red",linetype="dashed") +
+  scale_color_grey(start=1,end=0) +
+  coord_cartesian(ylim=c(-0.5,0.5)) +
+  xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin")) +
+  ylab(label="Log<sub>2</sub>FC") +
+  stat_summary(fun.data = count_data,fun.args=c(ymax=0.5), geom = "text",
+               position = position_dodge(1), size=3, colour="blue")+
+  theme(legend.position="none")
+p5
+
+
 #p<-ggpubr::ggarrange(p1,p3,
 #                     ggpubr::ggarrange(p2,p4,ncol=2,nrow=1),nrow=3,ncol=1)
 
-p<-cowplot::plot_grid(p1,p2,p3,p4,nrow=2,ncol=2,rel_widths=c(0.9,1,0.9,1),labels=c("a ","b ","c ", "d "),
+p<-cowplot::plot_grid(p1,p2,p3,p4,p5,nrow=3,ncol=2,rel_widths=c(0.9,1,0.9,1,2),labels=c("a ","b ","c ", "d ","e "),
                       align = "v",axis="tb")
 p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
 ggsave(paste0(finalFigDir,"/supplFig_fountainsVenhancers.pdf"), p, device="pdf",
-       width=19,height=18, units="cm")
-
-
-
-
-
-
-
+       width=19,height=27, units="cm")
