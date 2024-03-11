@@ -98,19 +98,37 @@ p1<-p1+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
   annotate(geom="text",x=1,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
            label=paste0(round((dd2$ecd10kb[dd2$type=="Active enhancer"])*100,0),"%"),
            color="darkgrey",vjust=0,size=3)
+
 # add pvalues
-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")
+# formatCustomSci <- function(x) {     # Create user-defined function
+#   x_sci <- str_split_fixed(formatC(x, format = "e"), "e", 2)
+#   alpha <- round(as.numeric(x_sci[ , 1]),1)
+#   power <- as.integer(x_sci[ , 2])
+#   if(x!=0){
+#     pval<-paste0(alpha,"x10",power)
+#   } else {
+#     pval<-"<2.2x10-16"
+#   }
+#   return(pval)
+# }
+
+pActive<-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")$p.value
 ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
+pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")$p.value
+pActive
+#pActive<-formatCustomSci(pActive)
+pActive<-ifelse(pActive<0.0001,"****","***")
+pRep<-ifelse(pRep>0.05,"ns",pRep)
+
 
 p1<-p1+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
                      xmax=as.numeric(dd2[2,"bracket1"]/1000),
-                     y.position=0.6, label="****",inherit.aes=F, bracket.nudge.y=0.02,
+                     y.position=0.6, label=pActive,inherit.aes=F, bracket.nudge.y=0.02,
                      tip.length=0.02,vjust=0.75,hjust=0.4,label.size=3) +
   geom_bracket(xmin=as.numeric(dd2[2,"bracket2"]/1000),
                xmax=as.numeric(dd2[3,"bracket2"]/1000),
-               y.position=0.63, label="ns",inherit.aes=F, bracket.nudge.y=0.02,
-               tip.length=0.02,vjust=0.2,hjust=0.2,label.size=3)
+               y.position=0.63, label=pRep,inherit.aes=F, bracket.nudge.y=0.02,
+               tip.length=0.02,vjust=0.2,hjust=0.4,label.size=3)
 
 p1
 
@@ -170,7 +188,7 @@ p2
 
 # enhancers
 JaenesL<-readRDS(paste0(publicDataDir,"/Jaenes2018_enhancers_ce11_stages_chromHMM.rds"))
-JaenesL<-JaenesL%>% filter(maxStage!="emb",maxStage!="ya", topState_L3_chromHMM %in% c("Active enhancer","H3K27me3 repressed","Repressed enhancer"))
+JaenesL<-JaenesL%>% filter(maxStage!="emb",maxStage!="l1",maxStage!="l2",maxStage!="l4",maxStage!="ya", topState_L3_chromHMM %in% c("Active enhancer","H3K27me3 repressed","Repressed enhancer"))
 length(JaenesL)
 #2725 l1-l3
 #all larval 3903
@@ -209,7 +227,7 @@ p3<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,color=type_count)) +
   coord_cartesian(xlim=c(1,150000/1000)) +
   geom_hline(yintercept=1,colour="darkgrey") +
   theme(legend.title=element_blank())+
-  ggtitle("Larval enhancers (Jaenes et al. 2018)")
+  ggtitle("L3 enhancers (Jaenes et al. 2018)")
 
 
 
@@ -223,21 +241,39 @@ p3<-p3+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
   annotate(geom="text",x=1,y=dd2$ecd10kb[dd2$type=="Active enhancer"]*1.02,
            label=paste0(round((dd2$ecd10kb[dd2$type=="Active enhancer"])*100,0),"%"),
            color="darkgrey",vjust=0,size=3)
+
 # add pvalues
-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")
+# formatCustomSci <- function(x) {     # Create user-defined function
+#   x_sci <- str_split_fixed(formatC(x, format = "e"), "e", 2)
+#   alpha <- round(as.numeric(x_sci[ , 1]),1)
+#   power <- as.integer(x_sci[ , 2])
+#   if(x!=0){
+#     pval<-paste0(alpha,"x10",power)
+#   } else {
+#     pval<-"<2.2x10-16"
+#   }
+#   return(pval)
+# }
+
+pActive<-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")$p.value
 ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
+pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")$p.value
+
+#pActive<-formatCustomSci(pActive)
+pActive<-ifelse(pActive<0.0001,"****","***")
+pRep<-ifelse(pRep>0.05,"ns",pRep)
+
 
 p3<-p3+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
                      xmax=as.numeric(dd2[2,"bracket1"]/1000),
-                     y.position=0.6, label="****",inherit.aes=F,
+                     y.position=0.6, label=pActive, inherit.aes=F,
                      bracket.nudge.y=0.02, label.size=3,
                      tip.length=0.02,vjust=0.75,hjust=0.4) +
   geom_bracket(xmin=as.numeric(dd2[2,"bracket2"]/1000),
                xmax=as.numeric(dd2[3,"bracket2"]/1000),
-               y.position=0.63, label="ns",inherit.aes=F,
+               y.position=0.63, label=pRep,inherit.aes=F,
                bracket.nudge.y=0.02, label.size=3,
-               tip.length=0.02,vjust=0.2,hjust=0.2)
+               tip.length=0.02,vjust=0.2,hjust=0.4)
 
 p3
 
@@ -286,7 +322,7 @@ p4<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
         legend.position="right",
         legend.key.size = unit(0.3, 'cm'))+
   #guides(fill=guide_legend(title.position="left",title.vjust=0,title.hjust=1))+
-  ggtitle("Larval enhancers (Jaenes et al. 2018)")
+  ggtitle("L3 enhancers (Jaenes et al. 2018)")
 p4
 
 
