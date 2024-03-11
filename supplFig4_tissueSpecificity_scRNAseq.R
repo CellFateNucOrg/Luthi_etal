@@ -78,16 +78,49 @@ cell_group_df <- tibble::tibble(cell=row.names(colData(cds)),
 
 agg_mat <- aggregate_gene_expression(cds, sig1, cell_group_df)
 
-p4<-pheatmap::pheatmap(t(agg_mat), cluster_rows=T, cluster_cols=F,
-                      scale="column", clustering_method="ward.D2",
-                      fontsize=10, angle_col=45)
+# p4<-pheatmap::pheatmap(t(agg_mat), cluster_rows=T, cluster_cols=F,
+#                       scale="column", clustering_method="ward.D2",
+#                       fontsize=10, angle_col=45)
 
-pnull<-NULL
+
+hm<-ComplexHeatmap::pheatmap(t(agg_mat), legend = F, cluster_rows = T, cluster_cols = F,
+                         heatmap_legend_param = list(title = "Aggregated\ngene\nexpression"),
+                         angle_col="45")
+gb_heatmap = grid::grid.grabExpr(ComplexHeatmap::draw(hm))
+p4 <- gtable::gtable_matrix("hm_gtbl", matrix(list(gb_heatmap)), unit(1, "null"), unit(1, "null"))
+
+
+
+# Closer look at Neurons -----
+## neuron types ----
+neurons_cds <- cds[,grepl("Neurons", colData(cds)$cell_type_group, ignore.case=TRUE)]
+cell_group_df <- tibble::tibble(cell=row.names(colData(neurons_cds)),
+                                cell_group=colData(neurons_cds)$assigned_cell_type)
+
+agg_mat <- aggregate_gene_expression(neurons_cds, sig1, cell_group_df)
+
+
+# p<-pheatmap::pheatmap(t(agg_mat), cluster_rows=T, cluster_cols=F,
+#                       scale="column", clustering_method="ward.D2",
+#                       fontsize=9, angle_col=45)
+
+hm1<-ComplexHeatmap::pheatmap(t(agg_mat), legend = TRUE, cluster_rows = F, cluster_cols = F,
+                              heatmap_legend_param = list(title = "Aggregated\ngene\nexpression"),
+                              row_order = order(t(agg_mat)[,1],decreasing=T),
+                              angle_col="45",fontsize_row=4.5)
+hm1
+
+gb_heatmap1 = grid::grid.grabExpr(ComplexHeatmap::draw(hm1))
+p5 <- gtable::gtable_matrix("hm_gtbl", matrix(list(gb_heatmap1)), unit(1, "null"), unit(1, "null"))
+
+
 p<-cowplot::plot_grid(plotlist=list(plot_grid(p1,p2,ncol=2,labels=c("c ","d ")),
                       p3,
-                      plot_grid(p4[[4]],pnull,ncol=2)),
+                      plot_grid(p4,p5,ncol=2,rel_widths=c(1,1.1))),
                       nrow=3, labels=c("","e ","g "), rel_heights=c(1,1,2))
 
 ggsave(filename=paste0(finalFigDir,"/supplFig4_tissueSpecificity_scRNAseq.png"),p,height=29,width=20,units="cm",device="png")
+
+
 
 
