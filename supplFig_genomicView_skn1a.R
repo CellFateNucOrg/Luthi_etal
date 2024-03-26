@@ -70,39 +70,11 @@ neuronATAC <- import("/Volumes/MeisterLab/publicData/ATACseq/Durham2021_L2tissue
 coh1<-import("/Volumes/MeisterLab/publicData/ChIPseq_realigned/modEncode_SMC/chip-seq-pipeline2/bigwig_fc/COH1_fem2_AD_SDQ0809_rep.pooled_x_ctl.pooled.fc.signal.bigwig",
              selection=grFix)
 
-H3K27ac<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/GSM624432_WA30634849_H3K27AC_N2_L3_1_ce11.bw",
-                selection=grFix)
-
-#H3K27me3<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/GSM562734_HK00013_H3K27ME31E7_N2_L3_1_ce11.bw",
-#                 selection=grFix)
-
-H3K27me3<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_realigned/modEncode_histone/bigwig_fc/H3K27me3_UP07449_rep.pooled_x_ctl.pooled.fc.signal.bigwig",
-                 selection=grFix)
-
-
-top1<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Morao-Ercan_MolCell2022_GSE188851/averaged/TOP1-GFP_AM05_L2-L3_ce11_avr.bw",
-             selection=grFix)
-
-top2<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Morao-Ercan_MolCell2022_GSE188851/averaged/TOP2-GFP_MDX53_L2-L3_ce11_avr.bw",
-             selection=grFix)
 
 chromStates<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/chromStates_L3_Evans2016_ce11_rgb.bed")
 
 chromDomains<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/chromDomains_L3_Evans2016_ce11_rgb.bed")
 
-chromHMM<-import("/Volumes/external.data/MeisterLab/publicData/ATACseq/Daugherty2017_GenomeRes_GSE89608/chromHMM/chromHMM_L3_Daugherty2017_ce11_rgb.bed")
-
-tpm366<-import("/Users/semple/Documents/MeisterLab/otherPeopleProjects/Moushumi/2021_RNAseq_MDas/tracks/PMW366_TPM_avr.bw",
-               selection=grFix)
-
-coh1lfc<-import("/Users/semple/Documents/MeisterLab/otherPeopleProjects/Bolaji/BolajiRNAseq_20211216/tracks/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_lfc.bw",
-                selection=grFix)
-
-ASIexpr<-import("/Volumes/MeisterLab/publicData/RNAseq/CeNGEN/intestine_pmStrands_log2Expr.bw",
-                selection=grFix)
-
-intestineExpr<-import("/Volumes/MeisterLab/publicData/RNAseq/CeNGEN/intestine_pmStrands_log2Expr.bw",
-                      selection=grFix)
 
 deletions <- import(paste0(fountainsDir,"/ubs_deletion.bed"))
 deletions$name<-gsub("_deletion","",deletions$name)
