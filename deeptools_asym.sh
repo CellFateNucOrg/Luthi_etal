@@ -42,5 +42,4 @@ plotProfile -m matrix_asymQ_COH1all.gz \
               --yMin 0.5 -1 -1 -1 \
               --yMax 2 5 3 3.5 \
               --colors "cyan" "black" "magenta" \
-              --plotTitle "Asymmetric quantiles" 
-              
+              --plotTitle "Asymmetric quantiles"
