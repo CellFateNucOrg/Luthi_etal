@@ -39,7 +39,7 @@ source(paste0(projectDir,"/functions.R"))
 source(paste0(projectDir,"/functions_fountainPlots.R"))
 
 
-fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.rds"))
+fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125c.rds"))
 colnames(mcols(fountains))[colnames(mcols(fountains))=="name"]<-"fountainName"
 rnaSeqFile<-paste0(rnaSeqDir,"/rds/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_DESeq2_fullResults.rds")
 
@@ -148,15 +148,7 @@ df1$type<-gsub("Count$","",df1$type)
 df1$type<-factor(df1$type,levels=c("Active", "Repressed","H3K27meRepressed"))
 levels(df1$type)<-c("Active", "Repressed","H3K27me3")
 
-# p2<-ggplot(df1,aes(x=count,fill=type)) +
-#   geom_bar(position=position_dodge(preserve = "single")) +
-#   facet_wrap(.~fountVcont) +
-#   scale_fill_manual(values=c("red","blue","darkgreen")) +
-#   xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
-#   ylab(paste0("Number of ",binSize/1000,"kb bins"))+
-#   theme(legend.title=element_blank(), legend.position=c(0.8,0.7),
-#         legend.key.size = unit(0.3, 'cm'))+
-#   ggtitle("L3 enhancers (Daugherty et al. 2017)")
+
 
 df1$fountVcont<-factor(df1$fountVcont, levels=c("control","fountain tip"))
 levels(df1$fountVcont)<-c("control","fountain\ntip")
@@ -175,97 +167,68 @@ p2<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
 p2
 
 
-getRandomClustering<-function(allRegions,numSim=100){
-  fountRegions<-allRegions[allRegions$fountVcont=="fountain tip"]
-  numEnh<-sum(fountRegions$ActiveCount)
-  numRegions<-length(fountRegions)
-  mat<-matrix(data=0,nrow=numSim,ncol=30)
-  colnames(mat)<-0:29
-  for(sim in 1:numSim){
-    s<-sample(1:numRegions,numEnh,replace=T)
-    d<-table(table(s))
-    mat[sim,"0"]<-numRegions-sum(d)
-    mat[sim,names(d)]<-d
-  }
-  return(mat)
-}
-
-mat<-getRandomClustering(allRegions,numSim=1000)
-randStats<-rbind(colMeans(mat),apply(mat,2,quantile,probs=c(0.025, 0.975)))
-randStats<-randStats[,1:(max(df1$count)+1)]
-rownames(randStats)<-c("mean","lci","uci")
-randdf<-data.frame(t(randStats))
-randdf$count<-rownames(randdf)
-randdf$data<-"expected"
-
-
-df2<-df1 %>% dplyr::filter(fountVcont=="fountain\ntip",type=="Active") %>%
-  dplyr::group_by(count) %>% summarise(mean=n(),lci=NA,uci=NA)
-#df2$count<-factor(df2$count)
-df2$data<-"observed"
-
-randdf<-rbind(randdf,df2)
-randdf$count<-factor(randdf$count,levels=0:max(df1$count))
-
-p3<-ggplot(randdf,aes(x=factor(count),y=mean)) +
-  geom_errorbar(aes(ymin=lci, ymax=uci), width=0.3,linewidth=0.5) +
-  geom_point(aes(color=data,shape=data),size=2) +
-  scale_shape_manual(values=c(3,16)) +
-  xlab("Number of active enhancers for 6kb fountain tip bin") +
-  ylab("Number of 6kb fountain tip bins")+
-  scale_color_manual(values=c("black","red"))+
-  theme(legend.position=c(0.8,0.6),legend.title=element_blank())+
-  ggtitle("L3 enhancers (Daugherty et al. 2017)")
-p3
-
-## number of enhancers per bin vs LFC
-# enhancers
-daughertyL3<-readRDS(paste0(publicDataDir,"/daugherty2017_L3Enhancers_ce11.rds"))
-
 binSize=6000
-fountains$fountVcont<-"fountain tip"
-#nonFount$fountVcont<-"control"
-
-allRegions<-fountains
+allRegions<-c(fountains)
 allRegions<-resize(allRegions,width=binSize,fix="center")
 
 allRegions$ActiveCount<-countOverlaps(allRegions,daughertyL3[daughertyL3$L3_chromHMMState=="L3_activeEnhancer"],ignore.strand=T,minoverlap=1)
 
-salmon<-readRDS(rnaSeqFile)
-salmon<-salmon[!is.na(salmon$chr),]
-salmonGR<-GRanges(salmon)
-ol<-findOverlaps(resize(salmonGR,width=1,fix="start"),allRegions,ignore.strand=T)
 
-salmonGR$ActiveCount<-0
-salmonGR$ActiveCount[queryHits(ol)]<-allRegions$ActiveCount[subjectHits(ol)]
+tiles<-tileGenome(seqlengths=seqlengths(Celegans),tilewidth=binSize,cut.last.tile.in.chrom = T)
+tiles$ActiveCount<-countOverlaps(tiles,daughertyL3[daughertyL3$L3_chromHMMState=="L3_activeEnhancer"],ignore.strand=T,minoverlap=1)
 
-df<-data.frame(salmonGR)
+tileSummary<-data.frame(tiles) %>%
+  dplyr::group_by(ActiveCount) %>% summarise(bins=n())
+
+df2<-data.frame(allRegions) %>%
+  dplyr::group_by(ActiveCount) %>% summarise(bins=n())
+
+df3<-left_join(tileSummary,df2,by=join_by(ActiveCount),suffix=c(".all",".fount"))
+df3[is.na(df3)]<-0
+df3$bins.nonFount<-df3$bins.all-df3$bins.fount
+
+
+df4<-pivot_longer(df3,cols=c(bins.fount,bins.nonFount),names_to="fountVnonFount",
+                  values_to="count")
+
+
+p3<-ggplot(df4,aes(x=factor(ActiveCount),y=count,fill=fountVnonFount)) +
+  geom_bar(stat = "identity",position = position_fill(reverse=T),
+           color="black",width=0.8)+
+  scale_fill_grey(paste0(binSize/1000,"kb bin type"),start=0,end=1,
+                  labels=c("Fountain","Not fountain")) +
+  geom_hline(yintercept=length(fountains)/length(tiles),color="red",
+             linetype="dashed") +
+  geom_text(aes(x=factor(ActiveCount),y=1.05,label=bins.all),color="blue",
+            size=2.5) +
+  xlab(paste0("Number of active enhancers per ",binSize/1000,"kb bin")) +
+  ylab(paste0("Fraction of ",binSize/1000,"kb bins")) +
+  theme(legend.position="bottom",legend.key.size = unit(0.3, 'cm'))+
+  ggtitle("L3 enhancers (Daugherty et al. 2017)")
+
+
+df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
-
-#ggplot(data=df[df$ActiveCount!=0,],aes(x=ActiveCount,y=log2FoldChange,fill=ActiveCount)) + geom_beeswarm() +
-#  geom_hline(yintercept=0) + scale_fill_grey(start=1,end=0.4)
-
-
-#' Function for adding count data to plots
-count_data <- function (y,ymax=5){
-  df <- data.frame(y = ymax, label = length(y))
-  return(df)
-}
+stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%
+  add_xy_position() %>%
+  filter(p.adj.signif!="ns")
 
 
-p4<-ggplot(data=df,aes(x=ActiveCount,y=log2FoldChange)) +
-  geom_jitter(width=0.2,size=1,aes(color=ActiveCount)) +
-  geom_boxplot(outlier.shape=NA,fill=NA,width=0.3) +
-  geom_hline(yintercept=0,color="red",linetype="dashed") +
-  scale_color_grey(start=1,end=0) +
-  coord_cartesian(ylim=c(-0.5,0.5)) +
-  xlab(paste0("Number of active enhancers per ",binSize/1000,"kb fountain tip bin")) +
-  ylab(label="Log<sub>2</sub>FC") +
-  stat_summary(fun.data = count_data,fun.args=c(ymax=0.5), geom = "text",
-               position = position_dodge(1), size=3, colour="blue")+
-  theme(legend.position="none") +
+df1<-df%>% group_by(ActiveCount) %>% summarise(total=n())
+df1
+
+p4<-ggplot(df,aes(x=factor(ActiveCount),y=symm._prom._fountain_score*1e3)) +
+  geom_boxplot(notch=T,outlier.shape=NA,fill="grey80") +
+  xlab("Number of active enhancers per 6kb bin") +
+  ylab("Fountain prominence score (x10<sup>-3</sup>)")+
+  stat_pvalue_manual(stat.test, label = "p.adj.signif",remove.bracket=T,
+                     y=2.3) +
+  geom_text(aes(x=ActiveCount,y=0,label=total),data=df1,color="blue",
+            size=2.5)+
   ggtitle("L3 enhancers (Daugherty et al. 2017)")
 p4
+
+
 
 
 
@@ -333,18 +296,6 @@ p5<-p5+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
            label=paste0(round((dd2$ecd10kb[dd2$type=="Active enhancer"])*100,0),"%"),
            color="darkgrey",vjust=0,size=3)
 
-# add pvalues
-# formatCustomSci <- function(x) {     # Create user-defined function
-#   x_sci <- str_split_fixed(formatC(x, format = "e"), "e", 2)
-#   alpha <- round(as.numeric(x_sci[ , 1]),1)
-#   power <- as.integer(x_sci[ , 2])
-#   if(x!=0){
-#     pval<-paste0(alpha,"x10",power)
-#   } else {
-#     pval<-"<2.2x10-16"
-#   }
-#   return(pval)
-# }
 
 pActive<-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")$p.value
 ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
@@ -372,6 +323,7 @@ p5
 binSize=6000
 fountains$fountVcont<-"fountain tip"
 nonFount$fountVcont<-"control"
+tiles<-tileGenome(seqlengths=seqlengths(Celegans),tilewidth=binSize,cut.last.tile.in.chrom = T)
 
 allRegions<-c(fountains,nonFount)
 allRegions<-resize(allRegions,width=binSize,fix="center")
@@ -393,15 +345,7 @@ levels(df1$type)<-c("Active", "Repressed","H3K27me3")
 df1$fountVcont<-factor(df1$fountVcont, levels=c("control","fountain tip"))
 levels(df1$fountVcont)<-c("control","fountain\ntip")
 
-# p4<-ggplot(df1,aes(x=count,fill=type)) +
-#   geom_bar(position=position_dodge(preserve = "single")) +
-#   facet_wrap(.~fountVcont) +
-#   scale_fill_manual(values=c("red","blue","darkgreen")) +
-#   xlab(paste0("Number of enhancers per ",binSize/1000,"kb bin"))+
-#   ylab(paste0("Number of ",binSize/1000,"kb bins")) +
-#   ggtitle("L1-L3 enhancers (Jaenes et al. 2018)") +
-#   theme(legend.title=element_blank(), legend.position=c(0.8,0.6),
-#         legend.key.size = unit(0.3, 'cm'))
+
 
 p6<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
   geom_bar(position = position_fill(reverse = TRUE),color="black",linewidth=0.1) +
@@ -412,7 +356,6 @@ p6<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
   theme(legend.title=element_text(size=8,angle=0),
         legend.position="right",
         legend.key.size = unit(0.3, 'cm'))+
-  #guides(fill=guide_legend(title.position="left",title.vjust=0,title.hjust=1))+
   ggtitle("L3 enhancers (Jaenes et al. 2018)")
 p6
 
@@ -432,101 +375,71 @@ getRandomClustering<-function(allRegions,numSim=100){
   return(mat)
 }
 
-mat<-getRandomClustering(allRegions,numSim=1000)
-randStats<-rbind(colMeans(mat),apply(mat,2,quantile,probs=c(0.025, 0.975)))
-randStats<-randStats[,1:(max(df1$count)+1)]
-rownames(randStats)<-c("mean","lci","uci")
-randdf<-data.frame(t(randStats))
-randdf$count<-rownames(randdf)
-randdf$data<-"expected"
-
-
-df2<-df1 %>% dplyr::filter(fountVcont=="fountain\ntip",type=="Active") %>%
-  dplyr::group_by(count) %>% summarise(mean=n(),lci=NA,uci=NA)
-#df2$count<-factor(df2$count,levels=as.character(0:max(df1$count)))
-df2$data<-"observed"
-
-randdf<-rbind(randdf,df2)
-randdf$count<-factor(randdf$count,levels=as.character(0:max(df1$count)))
-
-p7<-ggplot(randdf,aes(x=count,y=mean)) +
-  geom_errorbar(aes(ymin=lci, ymax=uci),width=0.4,linewidth=0.5) +
-  geom_point(aes(color=data,shape=data),size=2) +
-  scale_shape_manual(values=c(3,16)) +
-  xlab("Number of active enhancers for 6kb fountain tip bin") +
-  ylab("Number of 6kb fountain tip bins")+
-  scale_color_manual(values=c("black","red"))+
-  theme(legend.position=c(0.8,0.6),legend.title=element_blank()) +
-  ggtitle("L3 enhancers (Jaenes et al. 2018)")
-p7
-
-
-
-
-## number of enhancers per bin vs LFC
-
-# enhancers
-JaenesL<-readRDS(paste0(publicDataDir,"/Jaenes2018_enhancers_ce11_stages_chromHMM.rds"))
-JaenesL<-JaenesL%>% filter(topState_L3_chromHMM %in% c("Active enhancer","H3K27me3 repressed","Repressed enhancer"))
-length(JaenesL)
 
 binSize=6000
-fountains$fountVcont<-"fountain tip"
-#nonFount$fountVcont<-"control"
-
-allRegions<-fountains
+allRegions<-c(fountains)
 allRegions<-resize(allRegions,width=binSize,fix="center")
 
 allRegions$ActiveCount<-countOverlaps(allRegions,JaenesL[JaenesL$topState_L3_chromHMM=="Active enhancer"],ignore.strand=T,minoverlap=1)
 
-salmon<-readRDS(rnaSeqFile)
-salmon<-salmon[!is.na(salmon$chr),]
-salmonGR<-GRanges(salmon)
-ol<-findOverlaps(resize(salmonGR,width=1,fix="start"),allRegions,ignore.strand=T)
 
-salmonGR$ActiveCount<-0
-salmonGR$ActiveCount[queryHits(ol)]<-allRegions$ActiveCount[subjectHits(ol)]
+tiles<-tileGenome(seqlengths=seqlengths(Celegans),tilewidth=binSize,cut.last.tile.in.chrom = T)
+tiles$ActiveCount<-countOverlaps(tiles,JaenesL[JaenesL$topState_L3_chromHMM=="Active enhancer"],ignore.strand=T,minoverlap=1)
 
-df<-data.frame(salmonGR)
+tileSummary<-data.frame(tiles) %>%
+  dplyr::group_by(ActiveCount) %>% summarise(bins=n())
+
+df2<-data.frame(allRegions) %>%
+  dplyr::group_by(ActiveCount) %>% summarise(bins=n())
+
+df3<-left_join(tileSummary,df2,by=join_by(ActiveCount),suffix=c(".all",".fount"))
+
+df3$bins.nonFount<-df3$bins.all-df3$bins.fount
+
+df4<-pivot_longer(df3,cols=c(bins.fount,bins.nonFount),names_to="fountVnonFount",
+             values_to="count")
+
+
+p7<-ggplot(df4,aes(x=factor(ActiveCount),y=count,fill=fountVnonFount)) +
+  geom_bar(stat = "identity",position = position_fill(reverse=T),
+           color="black",width=0.8)+
+  scale_fill_grey(paste0(binSize/1000,"kb bin type"),start=0,end=1,
+                  labels=c("Fountain","Not fountain")) +
+  geom_hline(yintercept=length(fountains)/length(tiles),color="red",
+             linetype="dashed") +
+  geom_text(aes(x=factor(ActiveCount),y=1.05,label=bins.all),color="blue",
+            size=2.5) +
+  xlab(paste0("Number of active enhancers per ",binSize/1000,"kb bin")) +
+  ylab(paste0("Fraction of ",binSize/1000,"kb bins")) +
+  theme(legend.position="bottom",legend.key.size = unit(0.3, 'cm'))+
+  ggtitle("L3 enhancers (Jaenes et al. 2018)")
+
+
+df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
+stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%
+  add_xy_position() %>%
+  filter(p.adj.signif!="ns")
+stat.test
+df1<-df%>% group_by(ActiveCount) %>% summarise(total=n())
+df1
 
-#ggplot(data=df[df$ActiveCount!=0,],aes(x=ActiveCount,y=log2FoldChange,fill=ActiveCount)) + geom_beeswarm() +
-#  geom_hline(yintercept=0) + scale_fill_grey(start=1,end=0.4)
-
-
-#' Function for adding count data to plots
-count_data <- function (y,ymax=5){
-  df <- data.frame(y = ymax, label = length(y))
-  return(df)
-}
-
-
-p8<-ggplot(data=df,aes(x=ActiveCount,y=log2FoldChange)) +
-  geom_jitter(width=0.2,size=1,aes(color=ActiveCount)) +
-  geom_boxplot(outlier.shape=NA,fill=NA,width=0.3) +
-  geom_hline(yintercept=0,color="red",linetype="dashed") +
-  scale_color_grey(start=1,end=0) +
-  coord_cartesian(ylim=c(-0.5,0.5)) +
-  xlab(paste0("Number of active enhancers per ",binSize/1000,"kb fountain tip bin")) +
-  ylab(label="Log<sub>2</sub>FC") +
-  stat_summary(fun.data = count_data,fun.args=c(ymax=0.5), geom = "text",
-               position = position_dodge(1), size=3, colour="blue")+
-  theme(legend.position="none") +
+p8<-ggplot(df,aes(x=factor(ActiveCount),y=symm._prom._fountain_score*1e3)) +
+  geom_boxplot(notch=T,outlier.shape=NA,fill="grey80") +
+  xlab("Number of active enhancers per 6kb bin") +
+  ylab("Fountain prominence score (x10<sup>-3</sup>)")+
+  stat_pvalue_manual(stat.test, label = "p.adj.signif",remove.bracket=T,
+                     y=2.3) +
+  geom_text(aes(x=ActiveCount,y=0,label=total),data=df1,color="blue",size=2.5)+
   ggtitle("L3 enhancers (Jaenes et al. 2018)")
 p8
 
 
 
-
-
-#p<-ggpubr::ggarrange(p1,p3,
-#                     ggpubr::ggarrange(p2,p4,ncol=2,nrow=1),nrow=3,ncol=1)
-
 p<-cowplot::plot_grid(p1,p5,p2,p6,p3,p7,p4,p8,nrow=4,ncol=2,
-                      rel_widths=c(1,1,1,1,1,1,1,1),
                       labels=c("a ","b ","c ", "d ","e ","f ","g ","h "),
                       align = "v", axis="tb")
-p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Supl. Figure", size = 14))
 ggsave(paste0(finalFigDir,"/supplFig_fountainsVenhancers.pdf"), p, device="pdf",
        width=19,height=29, units="cm")
 
