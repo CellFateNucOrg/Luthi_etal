@@ -20,7 +20,7 @@ seqinfo(fountains)<-seqinfo(Celegans)
 i=500
 resolution=2000
 regions=c(3e5, 1e5 ,5e4)
-for(i in which(fountains$ScoreTercile=="3")){
+for(i in which(fountains$AsymmetryQuintile=="5")){
   gr<-trim(resize(fountains[i],width=max(regions)+resolution,fix="center"))
   print(paste0("Fountain: ", as.character(fountains[i])))
   print(paste0("Gathering data for: ",as.character(gr)))
@@ -99,7 +99,6 @@ for(i in which(fountains$ScoreTercile=="3")){
 
   tpm366<-import("/Users/semple/Documents/MeisterLab/otherPeopleProjects/Moushumi/2021_RNAseq_MDas/tracks/PMW366_TPM_avr.bw",
                  selection=grFix)
-  tpm366$score<-log2(tpm366$score)
 
   coh1lfc<-import("/Users/semple/Documents/MeisterLab/otherPeopleProjects/Bolaji/BolajiRNAseq_20211216/tracks/coh1_noOsc/coh1_noOsc_COH1vsTEVonly_lfc.bw",
                   selection=grFix)
@@ -110,11 +109,11 @@ for(i in which(fountains$ScoreTercile=="3")){
   for(region in regions){
     grFix<-trim(resize(fountains[i],width=region+resolution,fix="center"))
     print(paste0("Plotting: ",as.character(grFix)))
-    if(!dir.exists(paste0(fountainFigDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"))){
-      dir.create(paste0(fountainFigDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"),
+    if(!dir.exists(paste0(fountainFigDir,"/asym5_reg",region/1e3,"kb_res",resolution/1e3,"kb/"))){
+      dir.create(paste0(fountainFigDir,"/asym5_reg",region/1e3,"kb_res",resolution/1e3,"kb/"),
                  recursive=T)
     }
-    pdf(file=paste0(fountainFigDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/",
+    pdf(file=paste0(fountainFigDir,"/asym5_reg",region/1e3,"kb_res",resolution/1e3,"kb/",
                     "score", fountains$ScoreQuintile[i],"_asym",
                     fountains$AsymmetryQuintile[i],
                     "_",seqnames(fountains)[i],"_",start(fountains)[i],"-",
@@ -358,3 +357,4 @@ for(i in which(fountains$ScoreTercile=="3")){
     dev.off()
   }
 }
+

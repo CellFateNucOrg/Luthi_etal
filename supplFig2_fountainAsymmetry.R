@@ -10,6 +10,7 @@ library(dplyr)
 library(ggtext)
 library(cowplot)
 
+
 theme_set(
   theme_bw()+
     theme(panel.grid.major = element_blank(),
@@ -231,3 +232,201 @@ p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl. Figure", size = 14))
 ggsave(filename=paste0(finalFigDir,"/supplFig2_fountainAsymmetry.pdf"),
        p, device="pdf",height=29,width=15, units="cm")
 
+
+
+# library(readxl)
+# suppressPackageStartupMessages({
+#   library(monocle)
+#   library(dplyr)
+#   library(ggplot2)
+#   library(DescTools)
+# })
+#
+#
+# # df<-data.frame(wormbaseID=rownames(fData(cds)),publicID=fData(cds)$gene_short_name,
+# #                                gini=NA,avr=NA,stdev=NA)
+# #
+# # cds<-readRDS(paste0(publicDataDir,"/Cao_L2_cds_scRNAseq.rds"))
+# # for(i in 7969:nrow(exprs(cds))){
+# #   print(i)
+# #   df$gini[i]<-DescTools::Gini(exprs(cds)[i,])
+# #   df$avr[i]<-mean(exprs(cds)[i,])
+# #   df$stdev[i]<-sd(exprs(cds)[i,])
+# # }
+# #
+# # write.table(df,"cao_2017_gini.csv")
+#
+#
+# #### Ghaddar data (yAd)
+#
+# hk<-NULL
+# for(i in 1:5){
+#   tmp<-read_excel("/Users/semple/Documents/MeisterLab/Datasets/Ghaddar_2023_scRNAseq_yAd/sciadv.adg0506_data_s1_to_s7/adg0506_Data_S3.xlsx",sheet=i)
+#   if(is.null(hk)){
+#     hk<-tmp
+#   } else {
+#     hk<-rbind(hk,tmp)
+#   }
+# }
+# #hk<-read_excel("/Users/semple/Documents/MeisterLab/Datasets/Ghaddar_2023_scRNAseq_yAd/sciadv.adg0506_data_s1_to_s7/adg0506_Data_S3.xlsx",sheet=5)
+#
+# hk<-hk[!duplicated(hk$gene_ID),]
+#
+# metadata<-readRDS("RNAseq_DGE/wbGeneGR_WS275.rds")
+#
+# hkgr<-GRanges(left_join(hk,data.frame(metadata),by=join_by("gene_ID"=="wormbaseID")))
+#
+# upstream<-resize(shift(fountains,-2000),width=10000,fix="end")
+# downstream<-resize(shift(fountains,2000),width=10000,fix="start")
+# upstream$upVdown<-"upstream"
+# downstream$upVdown<-"downstream"
+#
+# fountflank<-c(upstream,downstream)
+# fountflank$housekeeping<-countOverlaps(fountflank,hkgr)
+#
+# data.frame(fountflank)%>%group_by(AsymmetryQuintile,upVdown) %>% summarise(avr=sum(housekeeping))
+#
+#
+# ## Cao et al.
+# hk<-read_excel("/Users/semple/Documents/MeisterLab/Datasets/Cao_2017_Science_scRNAseq_L2/aam8940_cao_sm_tables_s1_to_s14.xlsx",sheet=3,skip=1)
+# hk$gini<-apply(hk[,3:9],1,DescTools::Gini,na.rm = T)
+# hk<-hk[hk$gini<0.3,]
+#
+# metadata<-readRDS("RNAseq_DGE/wbGeneGR_WS275.rds")
+#
+# hkdf<-left_join(hk,data.frame(metadata),by=join_by("gene_id"=="wormbaseID"))
+# hkgr<-GRanges(hkdf[!is.na(hkdf$seqnames),])
+#
+#
+# upstream<-resize(shift(fountains,-2000),width=10000,fix="end")
+# downstream<-resize(shift(fountains,2000),width=10000,fix="start")
+# upstream$upVdown<-"upstream"
+# downstream$upVdown<-"downstream"
+#
+# fountflank<-c(upstream,downstream)
+# fountflank$housekeeping<-countOverlaps(fountflank,hkgr)
+#
+# data.frame(fountflank)%>%group_by(AsymmetryQuintile,upVdown) %>% summarise(avr=sum(housekeeping))
+
+## operons
+operon<-import("/Users/semple/Documents/MeisterLab/papers/Moushumi1/tracks/operon.bed")
+seqlevelsStyle(operon)<-"UCSC"
+metadata<-readRDS("./wbGeneGR_WS285.rds")
+seqlevelsStyle(metadata)<-"ucsc"
+
+
+
+upstream<-resize(shift(fountains,-2000),width=10000,fix="end")
+downstream<-resize(shift(fountains,2000),width=10000,fix="start")
+upstream$upVdown<-"upstream"
+downstream$upVdown<-"downstream"
+
+fountflank<-c(upstream,downstream)
+fountflank$housekeeping<-countOverlaps(fountflank,operon,ignore.strand=F)
+
+data.frame(fountflank)%>%group_by(AsymmetryQuintile,upVdown) %>% summarise(avr=sum(housekeeping))
+
+trackpath="/Users/semple/Documents/MeisterLab/papers/Moushumi1/tracks"
+bedfiles<-list.files(path=trackpath,pattern="*.bed")
+
+tiles<-unlist(tileGenome(seqlengths(Celegans),tilewidth=50))
+for(b in bedfiles){
+  bedfile<-import(paste0(trackpath,"/",b))
+  seqlevelsStyle(bedfile)<-"ucsc"
+  seqlevels(bedfile)<-seqlevels(Celegans)
+  cvr<-coverage(bedfile)
+  tiles<-binnedAverage(tiles,cvr,varname="score")
+  export(tiles,paste0(trackpath,"/",gsub("bed$","bw",b)))
+}
+
+cvr<-coverage(metadata[strand(metadata)=="+"])
+tiles<-binnedAverage(tiles,cvr,varname="score")
+export(tiles,paste0(trackpath,"/","positiveStrandGenes.bw"))
+
+
+cvr<-coverage(metadata[strand(metadata)=="-"])
+tiles<-binnedAverage(tiles,cvr,varname="score")
+export(tiles,paste0(trackpath,"/","negativeStrandGenes.bw"))
+
+metadatans<-metadata
+strand(metadatans)<-"*"
+
+intergenic<-gaps(metadatans,ignore.strand=T)
+cvr<-coverage(intergenic)
+tiles<-binnedAverage(tiles,cvr,varname="score")
+export(tiles,paste0(trackpath,"/intergenic_allGenes.bw"))
+
+cvr<-coverage(metadata)
+tiles<-binnedAverage(tiles,cvr,varname="score")
+export(tiles,paste0(trackpath,"/genic_allGenes.bw"))
+
+
+olp<-precede(intergenic,metadatans,ignore.strand=T)
+olf<-follow(intergenic,metadatans,ignore.strand=T)
+intergenic<-intergenic[!(is.na(olp) | is.na(olf))]
+
+
+intergenic$beforeStrand<-as.character(strand(metadata[olf[!(is.na(olp) | is.na(olf))]]))
+intergenic$afterStrand<-as.character(strand(metadata[olp[!(is.na(olp) | is.na(olf))]]))
+intergenic$gapType<-NA
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="-"]<-"tandemLeft"
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="+"]<-"divergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="-"]<-"convergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="+"]<-"tandemRight"
+
+for(ori in c("tandemLeft","divergent","convergent","tandemRight")){
+  cvr<-coverage(intergenic[intergenic$gapType==ori])
+  tiles<-binnedAverage(tiles,cvr,varname="score")
+  export(tiles,paste0(trackpath,"/",ori,"_allGenes.bw"))
+}
+
+
+metadatans<-metadata[width(metadata)>200]
+strand(metadatans)<-"*"
+
+intergenic<-gaps(metadatans,ignore.strand=T)
+olp<-precede(intergenic,metadatans,ignore.strand=T)
+olf<-follow(intergenic,metadatans,ignore.strand=T)
+intergenic<-intergenic[!(is.na(olp) | is.na(olf))]
+
+
+intergenic$beforeStrand<-as.character(strand(metadata[olf[!(is.na(olp) | is.na(olf))]]))
+intergenic$afterStrand<-as.character(strand(metadata[olp[!(is.na(olp) | is.na(olf))]]))
+intergenic$gapType<-NA
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="-"]<-"tandemLeft"
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="+"]<-"divergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="-"]<-"convergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="+"]<-"tandemRight"
+
+for(ori in c("tandemLeft","divergent","convergent","tandemRight")){
+  cvr<-coverage(intergenic[intergenic$gapType==ori])
+  tiles<-binnedAverage(tiles,cvr,varname="score")
+  export(tiles,paste0(trackpath,"/",ori,"_genesgt200.bw"))
+}
+
+metadatans<-metadata[width(metadata)<=200]
+strand(metadatans)<-"*"
+
+intergenic<-gaps(metadatans,ignore.strand=T)
+olp<-precede(intergenic,metadatans,ignore.strand=T)
+olf<-follow(intergenic,metadatans,ignore.strand=T)
+intergenic<-intergenic[!(is.na(olp) | is.na(olf))]
+
+
+intergenic$beforeStrand<-as.character(strand(metadata[olf[!(is.na(olp) | is.na(olf))]]))
+intergenic$afterStrand<-as.character(strand(metadata[olp[!(is.na(olp) | is.na(olf))]]))
+intergenic$gapType<-NA
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="-"]<-"tandemLeft"
+intergenic$gapType[intergenic$beforeStrand=="-" & intergenic$afterStrand=="+"]<-"divergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="-"]<-"convergent"
+intergenic$gapType[intergenic$beforeStrand=="+" & intergenic$afterStrand=="+"]<-"tandemRight"
+
+for(ori in c("tandemLeft","divergent","convergent","tandemRight")){
+  cvr<-coverage(intergenic[intergenic$gapType==ori])
+  tiles<-binnedAverage(tiles,cvr,varname="score")
+  export(tiles,paste0(trackpath,"/",ori,"_geneslt200.bw"))
+}
+
+cvr<-coverage(intergenic)
+tiles<-binnedAverage(tiles,cvr,varname="score")
+export(tiles,paste0(trackpath,"/",ori,"_geneslt200.bw"))

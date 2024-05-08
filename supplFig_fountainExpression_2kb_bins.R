@@ -12,7 +12,7 @@ library(cowplot)
 
 
 theme_set(
-  theme_bw()+
+  theme_classic()+
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           axis.title.y=ggtext::element_markdown(size=9),

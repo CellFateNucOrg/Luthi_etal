@@ -67,7 +67,7 @@ dd1<-data.frame(daughertyL3) %>%
   dplyr::mutate(ecd=ecdf(distanceToFount)(distanceToFount))
 
 dd1$type<-factor(dd1$L3_chromHMMState, levels=c("L3_activeEnhancer" ,"L3_repressedEnhancer","L3_H3K27me3Repressed"))
-levels(dd1$type)<-c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer")
+levels(dd1$type)<-c("Active enhancer", "Repressed enhancer", "H3K27me3 region")
 
 table(dd1$type)
 # to get some stats
@@ -80,7 +80,7 @@ dd2<-dd1 %>%
                    count=n())
 
 dd1$type_count<-dd1$type
-levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer"),
+levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 region"),
                                paste0(" (n=",dd2$count,")"))
 
 p1<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,color=type_count)) +
@@ -106,8 +106,8 @@ p1<-p1+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
 
 
 pActive<-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")$p.value
-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
-pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")$p.value
+ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 region"],alternative="less")
+pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 region"],alternative="less")$p.value
 pActive
 #pActive<-formatCustomSci(pActive)
 pActive<-ifelse(pActive<0.0001,"****","***")
@@ -210,7 +210,8 @@ p3<-ggplot(df4,aes(x=factor(ActiveCount),y=count,fill=fountVnonFount)) +
 df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
 stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%
-  add_xy_position() %>%
+  add_xy_position() %>% #p_format(new.col=T,accuracy=1e-32)%>%
+  mutate(p.pretty = prettyExponents(p.adj,html=F)) %>%
   filter(p.adj.signif!="ns")
 
 
@@ -221,13 +222,17 @@ p4<-ggplot(df,aes(x=factor(ActiveCount),y=symm._prom._fountain_score*1e3)) +
   geom_boxplot(notch=T,outlier.shape=NA,fill="grey80") +
   xlab("Number of active enhancers per 6kb bin") +
   ylab("Fountain prominence score (x10<sup>-3</sup>)")+
-  stat_pvalue_manual(stat.test, label = "p.adj.signif",remove.bracket=T,
-                     y=2.3) +
+  #stat_pvalue_manual(stat.test, label = "p.adj.format",remove.bracket=T,
+  #                   y=2.3) +
+  geom_signif(y_position=2.3,
+              annotations=stat.test$p.pretty,
+              xmin=stat.test$group2,
+              xmax=stat.test$group2,
+              parse=T, size=0, textsize=2.5, tip_length=0)+
   geom_text(aes(x=ActiveCount,y=0,label=total),data=df1,color="blue",
             size=2.5)+
   ggtitle("L3 enhancers (Daugherty et al. 2017)")
 p4
-
 
 
 
@@ -255,7 +260,7 @@ dd1<-data.frame(JaenesL) %>%
   dplyr::mutate(ecd=ecdf(distanceToFount)(distanceToFount))
 
 dd1$type<-factor(dd1$topState_L3_chromHMM, levels=c("Active enhancer" ,"Repressed enhancer","H3K27me3 repressed"))
-levels(dd1$type)<-c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer")
+levels(dd1$type)<-c("Active enhancer", "Repressed enhancer", "H3K27me3 region")
 
 table(dd1$type)
 
@@ -269,7 +274,7 @@ dd2<-dd1 %>%
                    count=n())
 
 dd1$type_count<-dd1$type
-levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 enhancer"),
+levels(dd1$type_count)<-paste0(c("Active enhancer", "Repressed enhancer", "H3K27me3 region"),
        paste0(" (n=",dd2$count,")"))
 
 
@@ -298,8 +303,8 @@ p5<-p5+ geom_segment(x=10,y=dd2$ecd10kb[dd2$type=="Active enhancer"],xend=10,
 
 
 pActive<-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="Repressed enhancer"],alternative="less")$p.value
-ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")
-pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 enhancer"],alternative="less")$p.value
+ks.test(dd1$ecd[dd1$type=="Active enhancer"],dd1$ecd[dd1$type=="H3K27me3 region"],alternative="less")
+pRep<-ks.test(dd1$ecd[dd1$type=="Repressed enhancer"],dd1$ecd[dd1$type=="H3K27me3 region"],alternative="less")$p.value
 
 #pActive<-formatCustomSci(pActive)
 pActive<-ifelse(pActive<0.0001,"****","***")
@@ -419,6 +424,7 @@ df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
 stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%
   add_xy_position() %>%
+  mutate(p.pretty = prettyExponents(p.adj,html=F)) %>%
   filter(p.adj.signif!="ns")
 stat.test
 df1<-df%>% group_by(ActiveCount) %>% summarise(total=n())
@@ -428,19 +434,23 @@ p8<-ggplot(df,aes(x=factor(ActiveCount),y=symm._prom._fountain_score*1e3)) +
   geom_boxplot(notch=T,outlier.shape=NA,fill="grey80") +
   xlab("Number of active enhancers per 6kb bin") +
   ylab("Fountain prominence score (x10<sup>-3</sup>)")+
-  stat_pvalue_manual(stat.test, label = "p.adj.signif",remove.bracket=T,
-                     y=2.3) +
+  geom_signif(y_position=rep(c(2.2,2.35), nrow(stat.test))[1:nrow(stat.test)],
+              annotations=stat.test$p.pretty,
+              xmin=stat.test$group2,
+              xmax=stat.test$group2,
+              parse=T, size=0, textsize=2.5, tip_length=0,step_increase=0.1)+
   geom_text(aes(x=ActiveCount,y=0,label=total),data=df1,color="blue",size=2.5)+
   ggtitle("L3 enhancers (Jaenes et al. 2018)")
 p8
 
 
 
-p<-cowplot::plot_grid(p1,p5,p2,p6,p3,p7,p4,p8,nrow=4,ncol=2,
+
+p<-cowplot::plot_grid(p1,p5,p2,p6,p3,p7,p4,p8,nrow=4, ncol=2,
                       labels=c("a ","b ","c ", "d ","e ","f ","g ","h "),
                       align = "v", axis="tb")
-p<-annotate_figure(p, top = text_grob("Lüthi et al., Supl. Figure", size = 14))
-ggsave(paste0(finalFigDir,"/supplFig_fountainsVenhancers.pdf"), p, device="pdf",
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Supl. Figure 3", size = 12))
+ggsave(paste0(finalFigDir,"/supplFig3_fountainsVenhancers.pdf"), p, device="pdf",
        width=19,height=29, units="cm")
 
 
