@@ -143,7 +143,7 @@ getListOfResults<-function(fileList,padjVal=NULL,lfcVal=0,direction="both",chr="
 resultsByGRoverlap<-function(fileList,gr,padjVal=NULL,lfcVal=0,direction="both",chr="all",
                              resizeTo=NULL){
   sigTables<-list()
-  i=1
+  #i=1
   for (i in 1:nrow(fileList)){
     salmon<-readRDS(fileList$filePath[i])
     salmon<-salmon[!is.na(salmon$chr),]

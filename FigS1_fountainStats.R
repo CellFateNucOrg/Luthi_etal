@@ -127,7 +127,7 @@ p6
 p<-cowplot::plot_grid(p1,p2,p4,p6,nrow=2,ncol=2,align="v",
                       labels=c("g ","h ","i ", "j "))
 p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S1", size = 12))
-ggsave(paste0(finalFigDir,"/supplFig_fountainStats.pdf"), p, device="pdf",
+ggsave(paste0(finalFigDir,"/FigS1_fountainStats.pdf"), p, device="pdf",
        width=18,height=17, units="cm")
 
 

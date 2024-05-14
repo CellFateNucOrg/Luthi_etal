@@ -297,7 +297,7 @@ pb<-cowplot::plot_grid(p5,p6,pnull,p7,nrow=2,ncol=2,
 
 p<-cowplot::plot_grid(pa,pb,nrow=2,ncol=1,align="v")
 
-p<-annotate_figure(p, top = text_grob("Isiaka et al., Supplementary Figure ", size = 14))
-ggsave(paste0(finalFigDir,"/supplFig_FountainsPer",regionSize/1e6,"Mb_armsVCenter.pdf"),p,width=18,height=27,
+p<-annotate_figure(p, top = text_grob("Isiaka et al., Figure S2", size = 12))
+ggsave(paste0(finalFigDir,"/FigS2_FountainsPer",regionSize/1e6,"Mb_armsVCenter.pdf"),p,width=18,height=27,
 device="pdf",units="cm")
 

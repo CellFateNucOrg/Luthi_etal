@@ -117,9 +117,9 @@ df$binnedDistance1<-factor(df$binnedDistance1,levels=selected)
 bin0<-ceiling(length(levels(df$binnedDistance1))/2)
 
 boxdf<-df %>%
-  group_by(binnedDistance1) %>%
+  dplyr::group_by(binnedDistance1) %>%
   mutate(domainWidth=sum(domainWidth),domainFrequency=sum(domainFrequency)) %>%
-  filter(binnedDistance1=="0") %>% select(-domain,-fountainLocation) %>% distinct()
+  filter(binnedDistance1=="0") %>% dplyr::select(-domain,-fountainLocation) %>% distinct()
 
 p1<-ggplot(df,aes(x=binnedDistance1,y=domainFrequency/1e3,fill=domain)) +
   geom_bar(position="stack",stat="identity") +
@@ -200,7 +200,7 @@ p3<-p3 + stat_pvalue_manual(data=stat.test, label = "p.format",y.position=c(3,2.
 p<-cowplot::plot_grid(p1,p2,p3,nrow=1,ncol=3,rel_widths=c(0.9,0.12,0.3),labels=c("a","","b"),
                       align="h")
 
-p<-annotate_figure(p, top = text_grob("Isiaka et al., Supl Figure ", size = 14))
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S4", size = 14))
 #ggsave(paste0(finalFigDir,"/supplFig_EvansDomains_2kb_bins_freq.pdf"), p, device="pdf",
 #       width=19,height=10, units="cm")
 
@@ -218,7 +218,7 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
                             regionSize=region,initialHeight=0){
   currentHeight<-initialHeight
   i=fountainIndex
-  gr<-trim(resize(fountains[i],width=max(regions)+resolution,fix="center"))
+  gr<-trim(resize(fountains[i],width=region+resolution,fix="center"))
   print(paste0("Fountain: ", as.character(fountains[i])))
   print(paste0("Gathering data for: ",as.character(gr)))
   # Data -----
@@ -288,8 +288,8 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
   ############ plots -----
   grFix<-trim(resize(fountains[i],width=region+resolution,fix="center"))
   print(paste0("Plotting: ",as.character(grFix)))
-  if(!dir.exists(paste0(fountainFigDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"))){
-    dir.create(paste0(fountainFigDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"),
+  if(!dir.exists(paste0(fountainsDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"))){
+    dir.create(paste0(fountainsDir,"/reg",region/1e3,"kb_res",resolution/1e3,"kb/"),
                recursive=T)
   }
 
@@ -477,7 +477,7 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
   )
 }
 
-pdf(paste0(finalFigDir,"/supplFig_EvansDomains_2kb_bins_freq.pdf"),
+pdf(paste0(finalFigDir,"/FigS4_EvansDomains_2kb_bins_freq.pdf"),
        width=11,height=19,paper="a4")
 
 pageCreate(width = 18, height = 25, params=params, showGuides=FALSE)
