@@ -59,7 +59,7 @@ rtracklayer::export(nonFount,paste0(fountainsDir,"/controlsForFountains_base0_un
 daughertyL3<-readRDS(paste0(publicDataDir,"/daugherty2017_L3Enhancers_ce11.rds"))
 
 
-####### ecdf enhancer distance to fountains
+## ecdf enhancer distance to fountains -----
 daughertyL3$distanceToFount<-mcols(distanceToNearest(daughertyL3,fountains,ignore.strand=T))$distance
 
 options(tibble.width=Inf)
@@ -127,7 +127,7 @@ p1<-p1+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
 p1
 
 
-# Number of enhancers per bin -------
+## Number of enhancers per bin -------
 binSize=6000
 fountains$fountVcont<-"fountain tip"
 nonFount$fountVcont<-"control"
@@ -167,7 +167,7 @@ p2<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
   ggtitle("L3 enhancers (Daugherty et al. 2017)")
 p2
 
-
+## Clustering of enhancers -----
 binSize=6000
 allRegions<-c(fountains)
 allRegions<-resize(allRegions,width=binSize,fix="center")
@@ -177,6 +177,7 @@ allRegions$ActiveCount<-countOverlaps(allRegions,daughertyL3[daughertyL3$L3_chro
 
 tiles<-tileGenome(seqlengths=seqlengths(Celegans),tilewidth=binSize,cut.last.tile.in.chrom = T)
 tiles$ActiveCount<-countOverlaps(tiles,daughertyL3[daughertyL3$L3_chromHMMState=="L3_activeEnhancer"],ignore.strand=T,minoverlap=1)
+
 
 tileSummary<-data.frame(tiles) %>%
   dplyr::group_by(ActiveCount) %>% summarise(bins=n())
@@ -208,6 +209,7 @@ p3<-ggplot(df4,aes(x=factor(ActiveCount),y=count,fill=fountVnonFount)) +
   ggtitle("L3 enhancers (Daugherty et al. 2017)")
 
 
+## Fountain prominence score v Number of enhancers -----
 df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
 stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%
@@ -252,7 +254,7 @@ JaenesL<-JaenesL%>% filter(topState_L3_chromHMM %in% c("Active enhancer","H3K27m
 #2725 l1-l3
 #all larval 3903
 
-####### ecdf enhancer distance to fountains
+## ecdf enhancer distance to fountains -----
 JaenesL$distanceToFount<-mcols(distanceToNearest(JaenesL,fountains,ignore.strand=T))$distance
 
 options(tibble.width=Inf)
@@ -325,7 +327,7 @@ p5<-p5+ geom_bracket(xmin=as.numeric(dd2[1,"bracket1"]/1000),
 
 p5
 
-# Number of enhancers per bin -------
+## Number of enhancers per bin -------
 binSize=6000
 fountains$fountVcont<-"fountain tip"
 nonFount$fountVcont<-"control"
@@ -366,22 +368,7 @@ p6<-ggplot(df1,aes(x=fountVcont,group=count,fill=factor(count))) +
 p6
 
 
-getRandomClustering<-function(allRegions,numSim=100){
-  fountRegions<-allRegions[allRegions$fountVcont=="fountain tip"]
-  numEnh<-sum(fountRegions$ActiveCount)
-  numRegions<-length(fountRegions)
-  mat<-matrix(data=0,nrow=numSim,ncol=30)
-  colnames(mat)<-0:29
-  for(sim in 1:numSim){
-    s<-sample(1:numRegions,numEnh,replace=T)
-    d<-table(table(s))
-    mat[sim,"0"]<-numRegions-sum(d)
-    mat[sim,names(d)]<-d
-  }
-  return(mat)
-}
-
-
+## Clustering of enhancers -----
 binSize=6000
 allRegions<-c(fountains)
 allRegions<-resize(allRegions,width=binSize,fix="center")
@@ -421,6 +408,7 @@ p7<-ggplot(df4,aes(x=factor(ActiveCount),y=count,fill=fountVnonFount)) +
   ggtitle("L3 enhancers (Jaenes et al. 2018)")
 
 
+## Fountain prominence score v Number of enhancers -----
 df<-data.frame(allRegions)
 df$ActiveCount<-factor(df$ActiveCount)
 stat.test<-df  %>% wilcox_test(symm._prom._fountain_score~ActiveCount,ref.group="0") %>%

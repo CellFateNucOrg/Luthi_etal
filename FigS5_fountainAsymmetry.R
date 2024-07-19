@@ -72,8 +72,8 @@ countLabels_a<-df[selected,]%>%
 # calculate stats
 stat_df<-df[!(df$AsymmetryQuintile %in% ignoreBins) & df$log2TPMtev >0,] %>%
   rstatix::group_by(AsymmetryQuintile,binnedDistance,drop=T) %>% filter(binnedDistance==2) %>%
-  rstatix::wilcox_test(log2TPMtev~binnedDistance1)  %>% filter(group2 %in% 2:10) %>%
-  adjust_pvalue(method="BH") %>%
+  rstatix::wilcox_test(log2TPMtev~binnedDistance1)  %>% #filter(group2 %in% 2:10) %>%
+  adjust_pvalue(method="fdr") %>%
   add_significance("p.adj") %>%
   filter(!group1 %in% ignoreBins) %>%
   add_xy_position(x="binnedDistance1") %>%
@@ -135,7 +135,7 @@ countLabels_a<-df[selected,]%>%
 stat_df<-df[!(df$AsymmetryQuintile %in% ignoreBins) & df$log2TPMcoh1 >0,] %>%
   rstatix::group_by(AsymmetryQuintile,binnedDistance,drop=T) %>% filter(binnedDistance==2) %>%
   rstatix::wilcox_test(log2TPMcoh1~binnedDistance1)  %>% filter(group2 %in% 2:10) %>%
-  adjust_pvalue(method="BH") %>%
+  adjust_pvalue(method="fdr") %>%
   add_significance("p.adj") %>%
   filter(!group1 %in% ignoreBins) %>%
   add_xy_position(x="binnedDistance1") %>%
