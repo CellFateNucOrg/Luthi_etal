@@ -168,4 +168,61 @@ resultsByGRoverlap<-function(fileList,gr,padjVal=NULL,lfcVal=0,direction="both",
 }
 
 
+#' Pairwise faceted violin/boxplot with stats
+#'
+#' Takes a df with columns sampleName, regionType and log2FoldChange and
+#' plots violin/boxplot for the two regionTyps faceted by sampleName.
+#' wilcoxon_test is performed on each pair and significance indicated. Total number
+#' of regions used also indicated in grey on bottom.
+#' @param df with sampleName, regionType and log2FoldChange columns
+#' @param gr regions used to plot (needed to calculate width)
+#' @param yvar Name of variable to plot on y axis (default is Log2FoldChange)
+#' @param ymin bottom of y scale used by coord_cartesian
+#' @param ymax top of y scale used by coord_cartesian
+#' @param facet_by Name of variable to facet by (default is sampleName). Can
+#' be set to NULL to eliminate facetting
+#' @param geneSet Name of gene set used in plot title e.g. "all" or "significant"
+#' @return plot
+#' @export
+pairwiseBoxPlotFunc<-function(df,gr,yvar="log2FoldChange",ymin=-1,ymax=1,facet_by="sampleName",geneSet="all",
+                              withViolin=T){
+  df$sampleName<-factor(df$sampleName, levels=unique(df$sampleName))
+  df$regionType<-factor(df$regionType)
 
+  stat_df<-df %>% rstatix::group_by(sampleName,drop=T) %>%
+    rstatix::mutate(column=get(yvar)) %>%
+    rstatix::wilcox_test(column~regionType) %>%
+    rstatix::adjust_pvalue(method="BH") %>%
+    rstatix::add_significance("p.adj") %>%
+    rstatix::add_xy_position(x="regionType") %>%
+    rstatix::mutate(y.position=0.9*ymax)
+  if(!is.null(facet_by)){
+    label_df<-df%>% dplyr::group_by(.data[[facet_by]],regionType) %>% dplyr::summarise(count=dplyr::n())
+  } else {
+    label_df<-df%>% dplyr::group_by(regionType) %>% dplyr::summarise(count=dplyr::n())
+  }
+  print(stat_df,width=Inf)
+  if(withViolin){
+    p<-ggplot(df,aes(x=regionType,y=get(yvar))) +
+      geom_violin(width=0.9,mapping=aes(fill=regionType))+
+      geom_boxplot(width=0.2,mapping=aes(fill=regionType),outlier.shape=NA)
+  } else {
+    p<-ggplot(df,aes(x=regionType,y=get(yvar))) +
+      geom_boxplot(width=0.8,mapping=aes(fill=regionType),outlier.shape=NA)
+  }
+  p<-p+scale_fill_manual(values=c("pink","lightblue"))+
+    coord_cartesian(ylim=c(ymin,ymax)) + ylab(yvar) +
+    stat_pvalue_manual(stat_df, label = "p.adj", remove.bracket=F,hide.ns = T,
+                       color="purple", bracket.size=0.5,bracket.short=0.1,tip.length=0.001,
+                       size=3)+
+    geom_text(data=label_df,aes(label=count),y=ymin,size=3,colour="grey30") +
+    #ggtitle(paste0(yvar," of ",geneSet," genes in fountains (",width(gr[1])/1000,"kb)"))+
+    theme(legend.position="none")
+  if(ymin<0){
+    p<-p+geom_hline(yintercept=0,colour="red",linetype=2)
+  }
+  if(!is.null(facet_by)){
+    p<-p+facet_wrap(.~get(facet_by),nrow=3)
+  }
+  return(p)
+}
