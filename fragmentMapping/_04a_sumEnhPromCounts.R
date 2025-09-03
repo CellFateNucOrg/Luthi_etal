@@ -12,26 +12,30 @@ rnaSeqDir=paste0(projectDir,"/RNAseq_DGE")
 publicDataDir=paste0(projectDir,"/publicData")
 
 bigDataDir="/mnt/external.data/MeisterLab/mdas/enhancer_fragment_mapping"
-
+#bigDataDir="/Volumes/external.data/MeisterLab/mdas/enhancer_fragment_mapping"
 
 args = commandArgs(trailingOnly=TRUE)
 
 ## Parameters ----
 if (length(args)==0) {
   minDistance=0
-  maxDistance=20000000
+  maxDistance=30000 #20000000
   #enhancerSet="jaenes"
   enhancerSet="daugherty"
   tssUpstream=100
   tssDownstream=100
+  ctrlStrain="366"
+  expStrain="828"
   print("using default parameters!")
   #stop("Please supply min and max distance for interaction", call.=FALSE)
-} else if (length(args)==5) {
+} else if (length(args)==7) {
   minDistance = as.numeric(args[1])
   maxDistance = as.numeric(args[2])
   enhancerSet=args[3]
   tssUpstream=as.numeric(args[4])
   tssDownstream=as.numeric(args[5])
+  ctrlStrain=args[6]
+  expStrain=args[7]
 } else {
   print("need five ordered arguments: minDistance(bp)\n maxDistance(bp)\n enhancerSet('jaenes' or 'daugherty')\ntssUpstream(bp)\ntssDownstream(bp)\n")
 }
@@ -43,10 +47,17 @@ print(paste0("using promoters with ",tssUpstream,"bp upstream, and ",tssDownstre
 
 ## Parameters ----
 maxKNN=5000
-fragLibs="828v366"
-# data from supl table S3 in paper.
-totalTEVlib<-sum(258355543, 163424616)
-totalCOH1lib<-sum(208298545, 130155406)
+fragLibs=paste0(expStrain,"v",ctrlStrain)
+# # data from supl table S3 in paper.
+# totalTEVlib<-sum(258355543, 163424616)
+# totalCOH1lib<-sum(208298545, 130155406)
+# totalDPY26lib<-sum(223887805, 139901094)
+# totalKLE2lib<-sum(204931744, 154903072)
+# totalSCC1lib<-sum(317973695, 250444362)
+# totalCOH1SCC1lib<-sum(172186520, 148507656)
+#
+# libSizes<-data.frame(expStrain=c("366","828","382","775","784","844"),
+#                      totalLib=c(totalTEVlib,totalCOH1lib,totalDPY26lib,totalKLE2lib,totalSCC1lib,totalCOH1SCC1lib))
 
 
 
@@ -107,7 +118,7 @@ fgi$P_E_distanceMid<-pairdist(fgi)
 
 ## add count data -----
 if(!exists("ctrlgi")){
-  ctrlgi<-readRDS(paste0(bigDataDir,"/rds/03__GIss_366_fragment_pair_counts_",
+  ctrlgi<-readRDS(paste0(bigDataDir,"/rds/03__GIss_",ctrlStrain,"_fragment_pair_counts_",
               minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
   ctrltotalFrag<-sum(ctrlgi$count)
 }
@@ -121,7 +132,7 @@ fgi$ctrlCounts[ol$queryHits]<-ol$sumCounts
 
 
 if(!exists("coh1gi")){
-  coh1gi<-readRDS(paste0(bigDataDir,"/rds/03__GIss_828_fragment_pair_counts_",
+  coh1gi<-readRDS(paste0(bigDataDir,"/rds/03__GIss_",expStrain,"_fragment_pair_counts_",
             minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
   coh1totalFrag<-sum(coh1gi$count)
 }
@@ -162,8 +173,8 @@ fgi$anchor2fountDist<-mcols(distanceToNearest(anchors(fgi)$second,fountains,igno
 # save
 if(!file.exists(paste0(bigDataDir,"/rds/04a__",enhancerSet,"Enh_Prom_",minDistance/1000,"-",maxDistance/1000,"kb_",fragLibs,"_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
   saveRDS(fgi,file=paste0(bigDataDir,"/rds/04a__",enhancerSet,"Enh_Prom_",minDistance/1000,"-",maxDistance/1000,"kb_",fragLibs,"_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.rds"))
-  export.bedpe(fgi, fn = paste0(bigDataDir,"/bedpe/",enhancerSet,"Enh_Prom_366_",minDistance/1000,"-",maxDistance/1000,"kb_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.bedpe"), score = "ctrlCounts")
-  export.bedpe(fgi, fn = paste0(bigDataDir,"/bedpe/",enhancerSet,"Enh_Prom_828_",minDistance/1000,"-",maxDistance/1000,"kb_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.bedpe"), score = "coh1Counts")
+  #export.bedpe(fgi, fn = paste0(bigDataDir,"/bedpe/",enhancerSet,"Enh_Prom_",ctrlStrain,"_",minDistance/1000,"-",maxDistance/1000,"kb_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.bedpe"), score = "ctrlCounts")
+  #export.bedpe(fgi, fn = paste0(bigDataDir,"/bedpe/",enhancerSet,"Enh_Prom_",expStrain,"_",minDistance/1000,"-",maxDistance/1000,"kb_maxK",maxKNN,"_prom",tssUpstream,"up",tssDownstream,"down.bedpe"), score = "coh1Counts")
 }
 
 

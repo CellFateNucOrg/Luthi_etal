@@ -34,18 +34,21 @@ source(paste0(projectDir,"/functions_plotting.R"))
 
 # for large files from HiC fragment mapping
 bigDataDir="/Volumes/external.data/MeisterLab/mdas/enhancer_fragment_mapping"
+#bigDataDir="Z:/MeisterLab/mdas/enhancer_fragment_mapping"
 args=list()
 ## Parameters ----
 if (length(args)==0) {
   minDistance=0
-  maxDistance=30000
-  enhancerSet="jaenes"
-  #enhancerSet="daugherty"
-  tssUpstream=100
+  maxDistance=30000 #30000
+  #enhancerSet="jaenes"
+  enhancerSet="daugherty"
+  tssUpstream=100 #300
   tssDownstream=100
+  ctrlStrain="366"
+  expStrain="828"
   print("using default parameters!")
   #stop("Please supply min and max distance for interaction", call.=FALSE)
-} else if (length(args)==5) {
+} else if (length(args)==7) {
   minDistance = as.numeric(args[1])
   maxDistance = as.numeric(args[2])
   enhancerSet=args[3]
@@ -62,12 +65,18 @@ print(paste0("using promoters with ",tssUpstream,"bp upstream, and ",tssDownstre
 
 #maxDistance=300000
 maxKNN=5000
-fragLibs="828v366"
+fragLibs=paste0(expStrain,"v",ctrlStrain)
 # data from supl table S3 in paper.
 totalTEVlib<-sum(258355543, 163424616)
 totalCOH1lib<-sum(208298545, 130155406)
-#totalSCC1lib<-sum(317973695, 250444362)
-#totalSCC1COH1lib<-sum(172186520, 148507656)
+totalDPY26lib<-sum(223887805, 139901094)
+totalKLE2lib<-sum(204931744, 154903072)
+totalSCC1lib<-sum(317973695, 250444362)
+totalCOH1SCC1lib<-sum(172186520, 148507656)
+
+libSizes<-data.frame(strain=c("366","828","382","775","784","844"),
+                     totalLib=c(totalTEVlib,totalCOH1lib,totalDPY26lib,totalKLE2lib,totalSCC1lib,totalCOH1SCC1lib),
+                     prettyName=c("TEV","COH-1","DPY-26","KLE-2","SCC-1","COH-1&SCC-1"))
 
 
 
@@ -87,8 +96,8 @@ pec<-pec %>% dplyr::group_by(anchor1.fragNames) %>%
 table(pec$ctrlRank,pec$coh1Rank)
 
 #normalise counts to library size
-pec$ctrlCPM<-pec$ctrlCounts*1e6/totalTEVlib
-pec$coh1CPM<-pec$coh1Counts*1e6/totalCOH1lib
+pec$ctrlCPM<-pec$ctrlCounts*1e6/libSizes$totalLib[libSizes$strain==ctrlStrain]#totalTEVlib
+pec$coh1CPM<-pec$coh1Counts*1e6/libSizes$totalLib[libSizes$strain==expStrain]#totalCOH1lib
 
 
 pec<-pec %>%  dplyr::filter(ctrlCounts>=10, coh1Counts>=10) %>%
@@ -97,34 +106,10 @@ pec<-pec %>%  dplyr::filter(ctrlCounts>=10, coh1Counts>=10) %>%
 dim(pec) # daugherty 12806
 print(pec,width=Inf)
 
+
 # plots -----
-
-### contact rank -----
-pec_ss<-pec[pec$ctrlRank<=10,]
-pec_ss$ctrlRank<-factor(pec_ss$ctrlRank,levels=c(1:10))
-stats_df<-pec_ss %>% dplyr::group_by(ctrlRank) %>% dplyr::summarise(count=dplyr::n(),ratioCoh1Ctrl=0)
-stats_df
-stat.test<-pec_ss  %>% wilcox_test(ratioCoh1Ctrl~ctrlRank,ref.group="1",
-                                alternative="two.sided",
-                                p.adjust.method="fdr") %>%
-  add_xy_position() %>% mutate(p.pretty = prettyExponents(p.adj,html=F)) %>%
-  filter(p.adj.signif!="ns")
-stat.test
-
-p1<-ggplot(pec_ss,aes(x=ctrlRank,y=ratioCoh1Ctrl)) +
-  geom_boxplot(outlier.shape=NA,fill="grey90",notch=T) +
-  geom_text(data=stats_df,mapping=aes(label=count),color="blue",
-            size=2.5) +
-  geom_signif(y_position=rep(c(2,2.1), nrow(stat.test))[1:nrow(stat.test)],
-              annotations=stat.test$p.pretty,
-              xmin=stat.test$group2,
-              xmax=stat.test$group2,
-              parse=T, size=0, textsize=2.5, tip_length=0)+
-  coord_cartesian(ylim=c(0,2.2)) +
-  geom_hline(yintercept=1,color="red") +
-  ylab("COH-1 / TEV counts ratio") +
-  xlab("Promoters ranked by contact probability in TEV control")
-p1
+ctrlPrettyName=libSizes$prettyName[libSizes$strain==ctrlStrain]
+expPrettyName=libSizes$prettyName[libSizes$strain==expStrain]
 
 
 
@@ -141,7 +126,7 @@ stat.test<-pec_ss  %>% wilcox_test(ratioCoh1Ctrl~distanceRank,ref.group="1",
   filter(p.adj.signif!="ns")
 stat.test
 
-p2<-ggplot(pec_ss,aes(x=distanceRank,y=ratioCoh1Ctrl)) +
+p1<-ggplot(pec_ss,aes(x=distanceRank,y=ratioCoh1Ctrl)) +
   geom_boxplot(outlier.shape=NA,fill="grey90",notch=T) +
   geom_hline(yintercept=1,color="red")+
   geom_text(data=stats_df,mapping=aes(label=count),color="blue",
@@ -152,23 +137,23 @@ p2<-ggplot(pec_ss,aes(x=distanceRank,y=ratioCoh1Ctrl)) +
               xmax=stat.test$group2,
               parse=T, size=0, textsize=2.5, tip_length=0)+
   coord_cartesian(ylim=c(0,2))  +
-  ylab("COH-1 / TEV counts ratio") +
+  ylab(paste0(expPrettyName," / ", ctrlPrettyName, " counts ratio")) +
   xlab("Promoters ranked by distance from enhancer")
-p2
+p1
 
 ### LFC by rank -----
-pec_ss<-pec[pec$ctrlRank<=10,]
-pec_ss$ctrlRank<-factor(pec_ss$ctrlRank,levels=c(1:10))
-stats_df<-pec_ss %>% dplyr::group_by(ctrlRank) %>% dplyr::summarise(count=dplyr::n(),anchor2.LFC=-0.4)
+pec_ss<-pec[pec$distanceRank<=10,]
+pec_ss$distanceRank<-factor(pec_ss$distanceRank,levels=c(1:10))
+stats_df<-pec_ss %>% dplyr::group_by(distanceRank) %>% dplyr::summarise(count=dplyr::n(),anchor2.LFC=-0.4)
 stats_df
-stat.test<-pec_ss %>% wilcox_test(anchor2.LFC~ctrlRank,ref.group="1",
+stat.test<-pec_ss %>% wilcox_test(anchor2.LFC~distanceRank,ref.group="1",
                                alternative="two.sided",
                                p.adjust.method="fdr") %>%
   add_xy_position() %>% mutate(p.pretty = prettyExponents(p.adj,html=F)) %>%
   filter(p.adj.signif!="ns")
 stat.test
 
-p2a<-ggplot(pec_ss,aes(x=ctrlRank,y=anchor2.LFC)) +
+p2<-ggplot(pec_ss,aes(x=distanceRank,y=anchor2.LFC)) +
   geom_boxplot(outlier.shape=NA,fill="grey90",notch=T) +
   geom_hline(yintercept=0,color="red")+
   geom_text(data=stats_df,mapping=aes(label=count),color="blue",
@@ -180,70 +165,45 @@ p2a<-ggplot(pec_ss,aes(x=ctrlRank,y=anchor2.LFC)) +
               parse=T, size=0, textsize=2.5, tip_length=0)+
   coord_cartesian(ylim=c(-0.4,0.4))  +
   ylab("RNAseq Log<sub>2</sub>FC") +
-  xlab("Promoters ranked by contact probability in TEV control")
-p2a
+  xlab("Promoters ranked by distance from enhancer")
 
-### LFC by distance -----
+p2
+
+
+
 pec_ss<-pec[pec$distanceRank<=10,]
-pec_ss$distanceRank<-factor(pec_ss$distanceRank,levels=c(1:10))
-stats_df<-pec_ss %>% dplyr::group_by(distanceRank) %>% dplyr::summarise(count=dplyr::n(),anchor2.LFC=-0.4)
-stats_df
-stat.test<-pec_ss %>% wilcox_test(anchor2.LFC~distanceRank,ref.group="1",
-                                  alternative="two.sided",
-                                  p.adjust.method="fdr") %>%
-  add_xy_position() %>% mutate(p.pretty = prettyExponents(p.adj,html=F)) %>%
-  filter(p.adj.signif!="ns")
-stat.test
-
-p2b<-ggplot(pec_ss,aes(x=distanceRank,y=anchor2.LFC)) +
-  geom_boxplot(outlier.shape=NA,fill="grey90",notch=T) +
-  geom_hline(yintercept=0,color="red")+
-  geom_text(data=stats_df,mapping=aes(label=count),color="blue",
-            size=2.5) +
-  geom_signif(y_position=rep(c(0.33,0.38), nrow(stat.test))[1:nrow(stat.test)],
-              annotations=stat.test$p.pretty,
-              xmin=stat.test$group2,
-              xmax=stat.test$group2,
-              parse=T, size=0, textsize=2.5, tip_length=0)+
-  coord_cartesian(ylim=c(-0.4,0.4))  +
-  ylab("RNAseq Log<sub>2</sub>FC") +
-  xlab("Promoters ranked by contact probability in TEV control")
-p2b
-
-
-
-pec_ss<-pec[pec$ctrlRank<=10,]
-pec_ss$ctrlRank<-factor(pec_ss$ctrlRank,levels=1:10)
-df1 = pec_ss[!duplicated(pec_ss$ctrlRank) ,]
-p3<-ggplot(pec_ss,aes(x=distance/1000,group=ctrlRank)) + geom_histogram() +
-  facet_wrap(.~ctrlRank,ncol=5) +
+pec_ss$distanceRank<-factor(pec_ss$distanceRank,levels=1:10)
+df1 = pec_ss[!duplicated(pec_ss$distanceRank) ,]
+p3<-ggplot(pec_ss,aes(x=distance/1000,group=distanceRank)) + geom_histogram() +
+  facet_wrap(.~distanceRank,ncol=5) +
   xlab("Distance of promoter from enhancer (kb)")+
   ylab("Number of promoters ") +
-  ggtitle("Contact probability rank in TEV control") +
-  geom_text(data=df1,x=7.5,y=+Inf,aes(label=ctrlRank),
+  ggtitle(paste0("Distance rank")) +
+  geom_text(data=df1,x=7.5,y=+Inf,aes(label=distanceRank),
             vjust = "inward", hjust = "inward") +
   theme(strip.background = element_blank(), strip.text.x = element_blank())
 p3
 
 
-pec_ss<-pec[pec$ctrlRank<=10,]
-pec_ss$ctrlRank<-factor(pec_ss$ctrlRank,levels=1:10)
-stats_df<-pec_ss %>% dplyr::group_by(ctrlRank) %>% dplyr::summarise(count=dplyr::n(), ctrlCounts=0)
+
+pec_ss<-pec[pec$distanceRank<=10,]
+pec_ss$distanceRank<-factor(pec_ss$distanceRank,levels=1:10)
+stats_df<-pec_ss %>% dplyr::group_by(distanceRank) %>% dplyr::summarise(count=dplyr::n(), ctrlCounts=0)
 stats_df
-p4<-ggplot(pec_ss,aes(y=ctrlCounts,x=ctrlRank)) + geom_boxplot(outlier.shape=NA) +
-  xlab("Promoter contact probability rank in TEV control")+
+p4<-ggplot(pec_ss,aes(y=ctrlCounts,x=distanceRank)) + geom_boxplot(outlier.shape=NA) +
+  xlab("Distance rank of promoter from enhancer") +
   ylab("Number of contacts ") +
   coord_cartesian(ylim=c(0,ifelse(enhancerSet=="daugherty",200,150))) +
   geom_text(data=stats_df,mapping=aes(label=count),color="blue",
                                             size=2.5)
 p4
 
-panelLabels<-if(enhancerSet=="daugherty"){c("a","c","e","g","i")} else {c("b","d","f","h","j")}
-p<-ggpubr::ggarrange(p1,p2,p2a,p3,p4,nrow=5,ncol=1,heights=c(1,1,1,1.1,0.9),
+panelLabels<-if(enhancerSet=="daugherty"){c("a","c","e","g")} else {c("b","d","f","h")}
+p<-ggpubr::ggarrange(p1,p2,p3,p4,nrow=4,ncol=1,heights=c(1,1,1.1,0.9),
                      labels=panelLabels)
 ggsave(paste0(finalFigDir,"/",enhancerSet,"Enhancer_Promoter_contactRatio_",
             minDistance/1000,"-",maxDistance/1000,"kb_",fragLibs,"_maxK",maxKNN,
-            "_prom",tssUpstream,"up",tssDownstream,"down.pdf"),
+            "_prom",tssUpstream,"up",tssDownstream,"down_distanceRank.pdf"),
        p,device="pdf",height=30, width=13, units="cm")
 
 

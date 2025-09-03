@@ -175,30 +175,111 @@ allGR<-unique(sort(allGR))
 
 
 # subset ctrl
-print("processing control gi")
-ctrl<-readRDS(paste0(bigDataDir,"/rds/02__GI_366_fragment_pair_counts_",
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_366_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+	print("processing control gi")
+	ctrl<-readRDS(paste0(bigDataDir,"/rds/02__GI_366_fragment_pair_counts_",
               minDistance/1000,"-",maxDistance/1000,"kb.rds"))
 
-# only keep interactions where both anchors overlap regions of interest
-ctrlSubset<-ctrl[overlapsAny(ctrl,allGR,type="any",ignore.strand=T,use.region="first") &
-      overlapsAny(ctrl,allGR,type="any",ignore.strand=T,use.region="second")]
+	# only keep interactions where both anchors overlap regions of interest
+	ctrlSubset<-ctrl[overlapsAny(ctrl,allGR,type="any",ignore.strand=T,use.region="first") &
+      		overlapsAny(ctrl,allGR,type="any",ignore.strand=T,use.region="second")]
 
-saveRDS(ctrlSubset,paste0(bigDataDir,"/rds/03__GIss_366_fragment_pair_counts_",
+	saveRDS(ctrlSubset,paste0(bigDataDir,"/rds/03__GIss_366_fragment_pair_counts_",
                     minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+	rm(ctrl)
+	rm(ctrlSubset)
+}
 
-
-rm(ctrl)
-rm(ctrlSubset)
 
 # subset coh1
-print("processing coh1 gi")
-coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_828_fragment_pair_counts_",
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_828_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+	print("processing coh1 gi")
+	coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_828_fragment_pair_counts_",
                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
 
-# only keep interactions where both anchors overlap regions of interest
-coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
+	# only keep interactions where both anchors overlap regions of interest
+	coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
                    overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="second")]
 
-saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_828_fragment_pair_counts_",
+	saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_828_fragment_pair_counts_",
           minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+	rm(coh1)
+	rm(coh1Subset)
+}
+
+
+# subset scc1
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_784_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+        print("processing scc1 gi")
+        coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_784_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+
+        # only keep interactions where both anchors overlap regions of interest
+        coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
+                   overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="second")]
+
+        saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_784_fragment_pair_counts_",
+          minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+        rm(coh1)
+        rm(coh1Subset)
+}
+
+
+# subset coh1/scc1
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_844_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+        print("processing coh1/scc1 gi")
+        coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_844_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+
+        # only keep interactions where both anchors overlap regions of interest
+        coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
+                   overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="second")]
+
+        saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_844_fragment_pair_counts_",
+          minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+        rm(coh1)
+        rm(coh1Subset)
+}
+
+
+
+# subset dpy26
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_382_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+        print("processing dpy26 gi")
+        coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_382_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+
+        # only keep interactions where both anchors overlap regions of interest
+        coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
+                   overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="second")]
+
+        saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_382_fragment_pair_counts_",
+          minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+        rm(coh1)
+        rm(coh1Subset)
+}
+
+
+
+# subset kle2
+if(!file.exists(paste0(bigDataDir,"/rds/03__GIss_775_fragment_pair_counts_",
+                    minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))){
+        print("processing kle2 gi")
+        coh1<-readRDS(paste0(bigDataDir,"/rds/02__GI_775_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+
+        # only keep interactions where both anchors overlap regions of interest
+        coh1Subset<-coh1[overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="first") &
+                   overlapsAny(coh1,allGR,type="any",ignore.strand=T,use.region="second")]
+
+        saveRDS(coh1Subset,paste0(bigDataDir,"/rds/03__GIss_775_fragment_pair_counts_",
+          minDistance/1000,"-",maxDistance/1000,"kb_enh_prom",tssUpstream,"up",tssDownstream,"down.rds"))
+        rm(coh1)
+        rm(coh1Subset)
+}
 

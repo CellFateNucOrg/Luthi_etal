@@ -5,7 +5,7 @@
 
 
 min_distance=0
-max_distance=30000
+max_distance=30000 #20000000
 maxDistkb=`expr $max_distance / 1000`
 minDistkb=`expr $min_distance / 1000`
 tssUpstream=100

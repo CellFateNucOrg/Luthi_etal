@@ -8,7 +8,9 @@ library(rtracklayer)
 library(dplyr)
 library(ggtext)
 library(cowplot)
-
+library(tidyr)
+library(purrr)
+library(ggbeeswarm)
 
 theme_set(
   theme_bw()+
@@ -141,6 +143,30 @@ p1<-ggplot(tbl,aes(x=type,y=log2FoldChange,fill=type)) +
   geom_text(data=boxlabels,aes(x=type,y=log2FoldChange,label=labels),angle=90,
             hjust=0,vjust=0,size=3)
 p1
+
+
+# cntstbl<-tbl %>% group_by(type,upVdown) %>% summarise(count=n())
+# facetlbls<-as.vector(boxlabels$labels)
+# names(facetlbls)<-boxlabels$type
+#
+# #cntstbl_wide <- cntstbl %>% tidyr::pivot_wider(names_from=upVdown,values_from=count)
+# #chisqout<-apply(cntstbl_wide,1,function(x){
+# #  chisq.test(as.numeric(x[2:3]))
+# #})
+#
+# p1a<-ggplot(tbl,aes(x=upVdown)) +
+#   geom_bar(aes(fill=upVdown),stat="count",color="black") +
+#   geom_text(data=cntstbl,aes(x=upVdown,label=count),y=-50,angle=0,
+#             hjust=0.5,vjust=1,size=3, color="blue")+
+#   facet_grid(~type, labeller=labeller(type=facetlbls)) +
+#   scale_fill_manual(values=c("white","black"))+
+#   theme(axis.title.x = element_blank(),#element_text(angle=90, vjust=0, hjust=3),
+#         legend.position = "none")
+# p1a
+
+
+
+
 
 
 ##################-
@@ -276,7 +302,48 @@ df<-rbind(fountRes,nonFountRes)
 p3<-pairwiseBoxPlotFunc(df,fountains,ymin=-0.8,ymax=0.8,facet_by=NULL)
 p3<-p3+xlab("") +ylab(label="Log<sub>2</sub>FC")
 
+p3
+sum(df$padj<0.05)
 
+
+df$upVdown<-"ns"
+df$upVdown[df$padj<padjVal & df$log2FoldChange>0]<-"Up"
+df$upVdown[df$padj<padjVal & df$log2FoldChange< 0]<-"Down"
+df$upVdown<-factor(df$upVdown,levels=c("Up","ns","Down"))
+
+cnts <- df %>%
+  group_by(regionType,upVdown) %>%
+  summarise(total = n())
+cnts$upVdown<-factor(cnts$upVdown,levels=c("Up","ns","Down"))
+cnts<-cnts  %>% group_by(regionType) %>%
+  arrange(regionType, desc(row_number())) %>%
+  mutate(cumsum=cumsum(total))
+
+cnts
+
+p3a<-ggplot(df) +
+  geom_bar(aes(x=regionType,fill=upVdown),stat="count",color="black") +
+  scale_fill_manual(values=c("grey","white","black"),name="Type of\nregulation") +
+  xlab("")+ ylab("Count")+
+  geom_text(data = cnts, aes(x = regionType, y = cumsum, label = total),
+            vjust = 1.5,color=rep(c("white","black","black"),2))
+
+
+
+total<-subdf %>% group_by(regionType) %>%
+  summarise(total = n(),log2FoldChange=-1.5)
+p3b<-ggplot(subdf) +
+  geom_beeswarm(aes(x=regionType,y=log2FoldChange,color=regionType),alpha=0.5) +
+  ylab(label="Log<sub>2</sub>FC")  + xlab("") +
+  theme(legend.position = "none") +
+  scale_color_manual(values=c("darkred","navyblue"))+
+  geom_hline(yintercept=0,col="grey10",linetype="dashed") +
+  geom_text(data = total, aes(x = regionType, y = log2FoldChange, label = total),
+            vjust = 0.5,color="black")
+
+p<-ggpubr::ggarrange(p3a,p3b,ncol=2,widths=c(0.45,0.55))
+ggsave(paste0(finalFigDir,"/RNAseq_fountains_counts&jitter.pdf"), p, device="pdf",
+       width=16,height=8, units="cm")
 
 
 #######################-

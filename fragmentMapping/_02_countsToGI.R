@@ -19,9 +19,9 @@ if (length(args)==0) {
   maxDistance=20000000
   #stop("Please supply min and max distance for interaction", call.=FALSE)
 } else if (length(args)==2) {
-  minDistance = as.numeric(args[1]) 
-  maxDistance = as.numeric(args[2]) 
-  print(paste0("using command line args. minDistance:",minDistance/1000,"kb maxDistance:",maxDistance/1000,"kb")) 
+  minDistance = as.numeric(args[1])
+  maxDistance = as.numeric(args[2])
+  print(paste0("using command line args. minDistance:",minDistance/1000,"kb maxDistance:",maxDistance/1000,"kb"))
 }
 
 
@@ -70,53 +70,156 @@ combineGIcounts<-function(gi1,gi2){
 
 ## get control counts ----
 if(!file.exists(paste0(bigDataDir,"/rds/02__GI_366_fragment_pair_counts_",
-                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
-  pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/366_3_fragment_pair_counts_",
-                                minDistance/1000,"-", maxDistance/1000,"kb.txt"),
-                         sep=" ",header=F)
-  counts1<-sum(pairCount1$V2)
-  counts1
-  gi1<-makeCisGI(pairCount1,fragments,maxDistance)
-  rm(pairCount1)
-  pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/366_4_fragment_pair_counts_",
-                                minDistance/1000,"-", maxDistance/1000,"kb.txt"),
-                         sep=" ",header=F)  #163424616
-  counts2<-sum(pairCount2$V2)
-  counts2
-  gi2<-makeCisGI(pairCount2,fragments,maxDistance)
-  rm(pairCount2)
-  ctrlgi<-combineGIcounts(gi1,gi2)
-  rm(gi1,gi2)
-  #forBedpe<-ctrlgi
-  #forBedpe$name<-paste0(ctrlgi$anchor1.name,"|",ctrlgi$anchor2.name)
-  #forBedpe$score<-ctrlgi$count
-  #export(forBedpe,paste0("GI_366_fragment_pair_counts_",minDistance/1000,
-  #"-",maxDistance/1000,"kb.bedpe"))
-  saveRDS(ctrlgi,paste0(bigDataDir,"/rds/02__GI_366_fragment_pair_counts_",
-                        minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
+ pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/366_3_fragment_pair_counts_",
+                               minDistance/1000,"-", maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ counts1<-sum(pairCount1$V2)
+ counts1
+ gi1<-makeCisGI(pairCount1,fragments,maxDistance)
+ rm(pairCount1)
+ pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/366_4_fragment_pair_counts_",
+                               minDistance/1000,"-", maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)  #163424616
+ counts2<-sum(pairCount2$V2)
+ counts2
+ gi2<-makeCisGI(pairCount2,fragments,maxDistance)
+ rm(pairCount2)
+ ctrlgi<-combineGIcounts(gi1,gi2)
+ rm(gi1,gi2)
+ #forBedpe<-ctrlgi
+ #forBedpe$name<-paste0(ctrlgi$anchor1.name,"|",ctrlgi$anchor2.name)
+ #forBedpe$score<-ctrlgi$count
+ #export(forBedpe,paste0("GI_366_fragment_pair_counts_",minDistance/1000,
+ #"-",maxDistance/1000,"kb.bedpe"))
+ saveRDS(ctrlgi,paste0(bigDataDir,"/rds/02__GI_366_fragment_pair_counts_",
+                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+ rm(ctrlgi)
 }
 
 
 ## get coh-1 counts ----
 if(!file.exists(paste0(bigDataDir,"/rds/02__GI_828_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
+ pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/828_1_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi1<-makeCisGI(pairCount1,fragments,maxDistance)
+ rm(pairCount1)
+ pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/828_2_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi2<-makeCisGI(pairCount2,fragments,maxDistance)
+ rm(pairCount2)
+ coh1gi<-combineGIcounts(gi1,gi2)
+ rm(gi1,gi2)
+ #forBedpe<-coh1gi
+ #forBedpe$name<-paste0(coh1gi$anchor1.name,"|",coh1gi$anchor2.name)
+ #forBedpe$score<-coh1gi$count
+ #export(forBedpe,paste0("GI_828_fragment_pair_counts_",maxDistance/1000,"kb.bedpe"))
+ saveRDS(coh1gi,paste0(bigDataDir,"/rds/02__GI_828_fragment_pair_counts_",
+                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+ rm(coh1gi)
+}
+
+
+
+# get scc-1 counts ----
+if(!file.exists(paste0(bigDataDir,"/rds/02__GI_784_fragment_pair_counts_",
                        minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
-  pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/828_1_fragment_pair_counts_",
+  pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/784_3_fragment_pair_counts_",
                                 minDistance/1000,"-",maxDistance/1000,"kb.txt"),
                          sep=" ",header=F)
   gi1<-makeCisGI(pairCount1,fragments,maxDistance)
   rm(pairCount1)
-  pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/828_2_fragment_pair_counts_",
+  pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/784_4_fragment_pair_counts_",
                                 minDistance/1000,"-",maxDistance/1000,"kb.txt"),
                          sep=" ",header=F)
   gi2<-makeCisGI(pairCount2,fragments,maxDistance)
   rm(pairCount2)
-  coh1gi<-combineGIcounts(gi1,gi2)
+  combgi<-combineGIcounts(gi1,gi2)
   rm(gi1,gi2)
   #forBedpe<-coh1gi
   #forBedpe$name<-paste0(coh1gi$anchor1.name,"|",coh1gi$anchor2.name)
   #forBedpe$score<-coh1gi$count
   #export(forBedpe,paste0("GI_828_fragment_pair_counts_",maxDistance/1000,"kb.bedpe"))
-  saveRDS(coh1gi,paste0(bigDataDir,"/rds/02__GI_828_fragment_pair_counts_",
+  saveRDS(combgi,paste0(bigDataDir,"/rds/02__GI_784_fragment_pair_counts_",
                         minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+  rm(combgi)
 }
 
+
+
+## get coh-1/scc-1 counts ----
+if(!file.exists(paste0(bigDataDir,"/rds/02__GI_844_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
+ pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/844_1_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi1<-makeCisGI(pairCount1,fragments,maxDistance)
+ rm(pairCount1)
+ pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/844_2_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi2<-makeCisGI(pairCount2,fragments,maxDistance)
+ rm(pairCount2)
+ combgi<-combineGIcounts(gi1,gi2)
+ rm(gi1,gi2)
+ #forBedpe<-coh1gi
+ #forBedpe$name<-paste0(coh1gi$anchor1.name,"|",coh1gi$anchor2.name)
+ #forBedpe$score<-coh1gi$count
+ #export(forBedpe,paste0("GI_828_fragment_pair_counts_",maxDistance/1000,"kb.bedpe"))
+ saveRDS(combgi,paste0(bigDataDir,"/rds/02__GI_844_fragment_pair_counts_",
+                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+ rm(combgi)
+}
+
+
+## get dpy-27 counts ----
+if(!file.exists(paste0(bigDataDir,"/rds/02__GI_382_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
+ pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/382_3_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi1<-makeCisGI(pairCount1,fragments,maxDistance)
+ rm(pairCount1)
+ pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/382_4_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi2<-makeCisGI(pairCount2,fragments,maxDistance)
+ rm(pairCount2)
+ combgi<-combineGIcounts(gi1,gi2)
+ rm(gi1,gi2)
+ #forBedpe<-coh1gi
+ #forBedpe$name<-paste0(coh1gi$anchor1.name,"|",coh1gi$anchor2.name)
+ #forBedpe$score<-coh1gi$count
+ #export(forBedpe,paste0("GI_828_fragment_pair_counts_",maxDistance/1000,"kb.bedpe"))
+ saveRDS(combgi,paste0(bigDataDir,"/rds/02__GI_382_fragment_pair_counts_",
+                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+ rm(combgi)
+}
+
+
+## get kle-2 counts ----
+if(!file.exists(paste0(bigDataDir,"/rds/02__GI_775_fragment_pair_counts_",
+                      minDistance/1000,"-",maxDistance/1000,"kb.rds"))){
+ pairCount1<-read.delim(paste0(bigDataDir,"/fragCounts/775_3_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi1<-makeCisGI(pairCount1,fragments,maxDistance)
+ rm(pairCount1)
+ pairCount2<-read.delim(paste0(bigDataDir,"/fragCounts/775_4_fragment_pair_counts_",
+                               minDistance/1000,"-",maxDistance/1000,"kb.txt"),
+                        sep=" ",header=F)
+ gi2<-makeCisGI(pairCount2,fragments,maxDistance)
+ rm(pairCount2)
+ combgi<-combineGIcounts(gi1,gi2)
+ rm(gi1,gi2)
+ #forBedpe<-coh1gi
+ #forBedpe$name<-paste0(coh1gi$anchor1.name,"|",coh1gi$anchor2.name)
+ #forBedpe$score<-coh1gi$count
+ #export(forBedpe,paste0("GI_828_fragment_pair_counts_",maxDistance/1000,"kb.bedpe"))
+ saveRDS(combgi,paste0(bigDataDir,"/rds/02__GI_775_fragment_pair_counts_",
+                       minDistance/1000,"-",maxDistance/1000,"kb.rds"))
+ rm(combgi)
+}
