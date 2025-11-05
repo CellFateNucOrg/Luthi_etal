@@ -206,80 +206,6 @@ p5<-ggplot(rexVfount,aes(x=relPosition)) + geom_histogram(bins=100) +
   ggtitle("Distribution of fountains within xTADs") + geom_density(color="green")
 #p5
 
-####### ecdf enhancer distance to fountains
-rex$distanceToFount<-mcols(distanceToNearest(rex,fountX,ignore.strand=T))$distance
-rex$replicate="real"
-
-rexRand<-rex
-for(i in 1:20){
-  newStarts<-sample(1:(17718942-2000), length(fountX), replace = F)
-  fakeFount<-GRanges(seqnames="chrX",ranges=IRanges(start=newStarts,width=2000))
-  seqlevels(fakeFount)<-seqlevels(Celegans)
-  tmp<-rex
-  tmp$replicate<-paste0("rand",i)
-  tmp$distanceToFount<-mcols(distanceToNearest(rex,fakeFount,ignore.strand=T))$distance
-  rexRand<-c(rexRand,tmp)
-}
-
-rexRand$type<-ifelse(rexRand$replicate=="real","real","rand")
-
-options(tibble.width=Inf)
-dd1<-data.frame(rexRand) %>%
-  dplyr::group_by(replicate) %>%
-  dplyr::mutate(ecd=ecdf(distanceToFount)(distanceToFount))
-dd1$replicate
-
-
-p6<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,group_by=replicate,color=type)) +
-  geom_line(linewidth=0.9)+
-  xlab("Distance to nearest fountain tip (kb)")+ylab("Fraction")+
-  scale_color_manual(labels=c("random fountains","real fountains"),values=c("grey","blue"))+
-  coord_cartesian(xlim=c(1,150000/1000)) +
-  geom_hline(yintercept=1,colour="darkgrey") +
-  theme(legend.title=element_blank(), legend.position=c(0.7,0.5)) +
-  ggtitle("Random fountain position chosen from whole chromosome")
-#p6
-
-
-# choosing fountain starts for gene starts
-genes<-readRDS(paste0(projectDir,"/ce11GeneGR_WS285.rds"))
-genes<-genes[seqnames(genes)=="chrX"]
-
-rexRand<-rex
-for(i in 1:20){
-  newStarts<-sample(start(genes[width(genes)>100]), length(fountX), replace = F)
-  fakeFount<-GRanges(seqnames="chrX",ranges=IRanges(start=newStarts,width=2000))
-  seqlevels(fakeFount)<-seqlevels(Celegans)
-  tmp<-rex
-  tmp$replicate<-paste0("rand",i)
-  tmp$distanceToFount<-mcols(distanceToNearest(rex,fakeFount,ignore.strand=T))$distance
-  rexRand<-c(rexRand,tmp)
-}
-
-rexRand$type<-ifelse(rexRand$replicate=="real","real","rand")
-
-options(tibble.width=Inf)
-dd1<-data.frame(rexRand) %>%
-  dplyr::group_by(replicate) %>%
-  dplyr::mutate(ecd=ecdf(distanceToFount)(distanceToFount))
-dd1$replicate
-
-
-p7<-ggplot(dd1, aes(x=distanceToFount/1000,y=ecd,group_by=replicate,color=type)) +
-  geom_line(linewidth=0.9)+
-  xlab("Distance to nearest fountain tip (kb)")+ylab("Fraction")+
-  scale_color_manual(labels=c("random fountains","real fountains"),values=c("grey","blue"))+
-  coord_cartesian(xlim=c(1,150000/1000)) +
-  geom_hline(yintercept=1,colour="darkgrey") +
-  theme(legend.title=element_blank(), legend.position=c(0.7,0.5)) +
-  ggtitle("Random fountain position chosen from starts of genes>100bp long")
-#p7
-
-
-
-
-
-
 
 
 
@@ -291,8 +217,8 @@ pnull<-NULL
 pa<-cowplot::plot_grid(p1,p2,p4,p3,nrow=2,ncol=2,
                       labels=c("a ","b ","c ","d "),
                       align="h",rel_widths=c(0.7,1))
-pb<-cowplot::plot_grid(p5,p6,pnull,p7,nrow=2,ncol=2,
-                   labels=c("e ","f "," ","g "),
+pb<-cowplot::plot_grid(p5,pnull,pnull,pnull,nrow=2,ncol=2,
+                   labels=c("e "," "," "," "),
                    rel_widths=c(0.7,1))
 
 p<-cowplot::plot_grid(pa,pb,nrow=2,ncol=1,align="v")

@@ -61,44 +61,29 @@ minDistance=30
 minCOH1=1
 df<-data.frame(tiles)
 
-p1<-ggplot(df, aes(x=fountDistance_kb,y=COH1)) +
-  geom_point(alpha=0.5,size=2) +
-  geom_density_2d(,colour="lightblue") +
-  xlab("Distance to nearest fountain (kb)") +
-  ylab("COH-1 ChIP signal per 2kb bin")
+nonfountbins<-df[df$COH1>minCOH1 & df$fountDistance_kb>minDistance,]
+dim(nonfountbins) #1392
+
+fountbins<-df[df$COH1>minCOH1 & df$COH1<=max(nonfountbins$COH1) & df$fountDistance_kb<3,]
+dim(fountbins) #1915
+
 
 p1a<-ggplot(df, aes(x=fountDistance_kb,y=COH1)) +
   geom_bin2d(bins=100) +
   xlab("Distance to nearest fountain (kb)") +
   ylab("COH-1 ChIP signal per 2kb bin") +
   scale_fill_gradient2(low="lightgrey", mid = "darkblue",high="lightblue",midpoint=100)
-p1a
-mean(df$COH1[df$fountDistance_kb<4])
-median(df$COH1[df$fountDistance_kb<4])
-
-dim(df[df$COH1>minCOH1,])
-ggplot(df[df$COH1>minCOH1,], aes(x=fountDistance_kb,y=COH1)) +
-  geom_point(alpha=0.5,size=2) +
-  geom_density_2d(,colour="lightblue") +
-  xlab("Distance to nearest fountain (kb)") +
-  ylab("COH-1 ChIP signal per 2kb bin") +
-  geom_vline(xintercept=11,colour="red") +
-  geom_vline(xintercept=3,colour="red")
 
 p2<-p1a+annotate("rect", xmin = 0, xmax = 3 , ymin = minCOH1, ymax = max(nonfountbins$COH1),
            alpha = .1, colour = "red", fill=NA) +
-  annotate("text", x=0, y=max(nonfountbins$COH1)*1.1, label="fountain\ntip bins\nsampled",
+  annotate("text", x=0, y=max(nonfountbins$COH1)*1.2, label="fountain\ntip bins\nsampled",
            hjust=0.2,vjust=0.3) +
   annotate("rect", xmin = minDistance, xmax = 200 , ymin = minCOH1, ymax = max(nonfountbins$COH1),
            alpha = .1, colour = "red",fill=NA)+
 annotate("text", x=100, y=max(nonfountbins$COH1)*1.1, label=paste0("non fountain bins sampled"))
 p2
 
-nonfountbins<-df[df$COH1>minCOH1 & df$fountDistance_kb>minDistance,]
-dim(nonfountbins) #1392
 
-fountbins<-df[df$COH1>minCOH1 & df$COH1<max(nonfountbins$COH1) & df$fountDistance_kb<3,]
-dim(fountbins) #1915
 
 
 set1=fountbins
@@ -162,25 +147,6 @@ p3<-ggplot(dd,aes(x=COH1)) + geom_histogram() +
 p3
 
 
-stat.test<-dd  %>% wilcox_test(COH1~set) %>%
-  add_xy_position()
-stats_df<-dd %>% group_by(set) %>% summarise(count=n(),COH1=-Inf)
-
-p3a<-ggplot(dd,aes(x=set,y=COH1)) + geom_boxplot() +
-  ylab("COH-1 ChIP signal per 2kb bin") + theme(axis.title.x=element_blank())+
-  stat_pvalue_manual(stat.test, label = "p", remove.bracket=F,
-                     y=4)+
-  geom_text(data=stats_df,mapping=aes(label=count),vjust=-0.5)+
-  theme(axis.title.x=element_blank())+coord_cartesian()
-p3a
-
-p4<-ggplot(dd,aes(x=fountDistance_kb)) + geom_histogram(bins=30) +
-  facet_wrap(~set)+
-  geom_text(data = dd %>% group_by(set) %>% summarise(count=n()),
-            aes(label = paste("Count:",count), y = Inf, x  = Inf), vjust = 1, hjust = 1)+
-  ylab("Number of 2kb bins") + xlab("Distance to nearest fountain (kb)")
-p4
-
 fountgr<-GRanges(dd[dd$set=="fountain tips +-2kb",])
 nonfountgr<-GRanges(dd[dd$set==paste0(">",minDistance,"kb from fountain tips"),])
 
@@ -220,7 +186,7 @@ table(salmontss$fountVnonfount)
 
 COH1ol<-data.frame(matched[["COH1"]])
 levels(COH1ol$set)<-c("fountain tips\n +-2kb",paste0(">",minDistance,"kb from\nfountain tips"))
-stat.test<-COH1ol  %>% wilcox_test(COH1~set) %>%
+stat.test<-COH1ol  %>% wilcox_test(COH1~set,alternative="greater") %>%
   add_xy_position()
 stats_df<-COH1ol %>% group_by(set) %>% summarise(count=n(),COH1=-Inf)
 
@@ -240,30 +206,21 @@ p3b
 toplot<-data.frame(salmontss)[!is.na(data.frame(salmontss)$fountVnonfount),]
 toplot$fountVnonfount<-factor(toplot$fountVnonfount)
 levels(toplot$fountVnonfount)<-c("fountain tips\n +-2kb",paste0(">",minDistance,"kb from\nfountain tips"))
-stats_df<-toplot %>% group_by(fountVnonfount) %>% summarise(count=n(),log2FoldChange=-0.5)
-stat.test<-toplot  %>% wilcox_test(log2FoldChange~fountVnonfount) %>%
+stats_df<-toplot %>% group_by(fountVnonfount) %>% summarise(count=n(),log2FoldChange=-0.35)
+stat.test<-toplot  %>% wilcox_test(log2FoldChange~fountVnonfount, alternative="greater") %>%
   add_xy_position()
 
 
 p5<-ggplot(toplot,aes(x=fountVnonfount,y=log2FoldChange)) +
   geom_boxplot(fill="grey90",outlier.shape=NA) +
   geom_hline(yintercept=0,linetype="dashed") +
-  coord_cartesian(ylim=c(-0.3,0.5)) +
+  coord_cartesian(ylim=c(-0.35,0.5)) +
   geom_text(data=stats_df,mapping=aes(label=count)) +
   stat_pvalue_manual(stat.test, label = "p",remove.bracket=F,
                      y=0.4,tip.length = 0.01) +
   theme(axis.title.x=element_blank()) +
   ylab(label="log<sub>2</sub>FC")
 p5
-
-p6<-ggplot(toplot,aes(x=fountVnonfount,y=log2FoldChange)) +
-  geom_violin(fill="grey90") + geom_hline(yintercept=0) +
-  coord_cartesian(ylim=c(-0.8,0.8))+
-  geom_text(data=stats_df,mapping=aes(label=count))+
-  stat_pvalue_manual(stat.test, label = "p",remove.bracket=F,
-                     y=0.8) +
-  theme(axis.title.x=element_blank())
-p6
 
 seed=1243
 set.seed(seed)
@@ -279,9 +236,9 @@ for(i in 1:100){
   salmontss<-matched[["RNAseq"]]
   COH1ol<-data.frame(matched[["COH1"]])
   # get p-values
-  COH1_wilcox[i]<-wilcox.test(COH1ol$COH1[COH1ol$set==1],COH1ol$COH1[COH1ol$set==2])$p.value
+  COH1_wilcox[i]<-wilcox.test(COH1ol$COH1[COH1ol$set==1],COH1ol$COH1[COH1ol$set==2],alternative="greater")$p.value
   LFC_wilcox[i]<-wilcox.test(salmontss$log2FoldChange[salmontss$fountVnonfount=="fount"],
-                             salmontss$log2FoldChange[salmontss$fountVnonfount=="nonfount"])$p.value
+                             salmontss$log2FoldChange[salmontss$fountVnonfount=="nonfount"], alternative="greater")$p.value
 }
 
 
@@ -292,19 +249,14 @@ pvals<-rbind(data.frame(test="COH1",pval=unlist(COH1_wilcox)),
 p7<-ggplot(pvals,aes(x=pval)) +geom_histogram()+
   facet_wrap(~test,labeller=labeller(test=testnames)) +
   geom_vline(xintercept=0.05,colour="red")+
-  xlab("p-values") +
+  xlab("p-value") +
   theme(strip.text.x = element_markdown())
 p7
 
-p<-ggpubr::ggarrange(p2,ggpubr::ggarrange(p3,p4,ncol=2),
-                     ggpubr::ggarrange(p3b,p5,p6,ncol=3),
-                     ggpubr::ggarrange(tableGrob(table(dd$set,dd$seqnames),theme=ttheme_default(base_size=8)),
-                                       p7,ncol=2),
-                     nrow=4,heights=c(1,0.8,1,0.6))
-ggsave(paste0("COH1vsRNAseq_",minDistance,"kb_",minCOH1,"COH1.pdf"),p,device="pdf",width=19,height=29,units="cm")
 
 p<-ggpubr::ggarrange(p2,ggpubr::ggarrange(p3,p3b,ncol=2,widths=c(1.2,1), labels=c("b ","c ")),
                      ggpubr::ggarrange(p5,p7,ncol=2,widths=c(1,1.2),labels=c("d ","e ")),
                      nrow=3,labels=c("a ","",""))
-ggsave(paste0("COH1vsRNAseq_matchedCOH1.pdf"),p,device="pdf",width=18,height=21,units="cm")
-
+p<-annotate_figure(p, top = text_grob("Isiaka et al., Figure S6", size = 12))
+ggsave(paste0(finalFigDir,"/FigS6_COH1vsRNAseq_matchedCOH1.pdf"),p,device="pdf",width=18,height=21,units="cm")
+ggsave(paste0(finalFigDir,"/FigS6_COH1vsRNAseq_matchedCOH1.png"),p,device="png",width=18,height=21,units="cm")

@@ -426,24 +426,6 @@ for(gFeat in gFeatures){
 
 
 
-# skn-1 DTE ------
-
-res<-data.frame(readRDS(paste0(rnaTxSeqDir,"/sleuth_coh1cs_DTE.RDS")))
-skn1<-res$target_id[res$publicID=="skn-1"]
-tmp<-res[res$publicID=="skn-1",]
-tmp<-tmp[complete.cases(tmp),]
-tmp$txt<-round(tmp$qval,2)
-tmp$txt[tmp$txt>0.05]<-"ns"
-tmp$txtPos<-0.15
-tmp$label<-c("a","b")
-
-p5<-ggplot(tmp,aes(x=label,y=b)) +
-  geom_bar(stat="identity",fill="lightgrey",color="black") +
-  xlab("*skn-1* isoform") + ylab(label="Log<sub>2</sub>FC") +
-  geom_errorbar(aes(ymin=b-se_b,ymax=b+se_b),width=0.2) +
-  geom_hline(yintercept=0) + coord_cartesian(ylim=c(-0.23,0.16)) +
-  geom_text(aes(y=txtPos,label=txt),size=3,color="purple")
-p5
 
 
 # assemble final figure -----------
@@ -452,8 +434,7 @@ pnull<-ggplot()
 
 p<-ggpubr::ggarrange(ggpubr::ggarrange(p1,p2,p3,ncol=3,widths=c(0.5,0.25,0.25), labels=c("a ", "b ", "d ")),
                      ggpubr::ggarrange(plotlist=plotList, labels=c("e "),nrow=1,ncol=6),
-                     ggpubr::ggarrange(pnull,p5,nrow=1,ncol=2,widths=c(0.9,0.2),labels=c(" ","h ")),nrow=3,
-                     heights=c(1,0.9,0.8))
+                     ,nrow=2, heights=c(1,0.9))
 p<-annotate_figure(p, top = text_grob("Isiaka et al., Figure 4", size = 14))
 ggsave(paste0(finalFigDir,"/fig4_RNAseq.pdf"), p, device="pdf",
        width=19,height=19, units="cm")

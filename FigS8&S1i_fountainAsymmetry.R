@@ -228,8 +228,8 @@ p3
 
 
 p<-ggarrange(p1,p2,p3,nrow=3)
-p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S5", size = 14))
-ggsave(filename=paste0(finalFigDir,"/FigS5_fountainAsymmetry.pdf"),
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S8", size = 14))
+ggsave(filename=paste0(finalFigDir,"/FigS8_fountainAsymmetry.pdf"),
        p, device="pdf",height=29,width=15, units="cm")
 
 
