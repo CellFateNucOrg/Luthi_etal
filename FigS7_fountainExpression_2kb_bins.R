@@ -309,6 +309,6 @@ p5
 p<-ggarrange(p1,p2,p3,ggarrange(p4,p5,nrow=1,ncol=2,labels=c("d ","e ")),nrow=4,
              labels=c("a ","b ","c "))
 p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S7", size = 12))
-ggsave(filename=paste0(finalFigDir,"/supplFig_fountainExpression_2kb_bins.pdf"),
+ggsave(filename=paste0(finalFigDir,"/FigS7_fountainExpression_2kb_bins.pdf"),
        p, device="pdf",height=29,width=19, units="cm")
 

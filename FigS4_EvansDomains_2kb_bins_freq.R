@@ -204,8 +204,6 @@ p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S4", size = 14))
 #ggsave(paste0(finalFigDir,"/supplFig_EvansDomains_2kb_bins_freq.pdf"), p, device="pdf",
 #       width=19,height=10, units="cm")
 
-p
-
 
 fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.rds"))
 seqlevels(fountains)<-seqlevels(Celegans)
@@ -214,8 +212,12 @@ resolution=2000
 region=3e5
 
 
+
+
+
+
 drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
-                            regionSize=region,initialHeight=0){
+                            regionSize=region, initialHeight=0){
   currentHeight<-initialHeight
   i=fountainIndex
   gr<-trim(resize(fountains[i],width=region+resolution,fix="center"))
@@ -256,11 +258,12 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
   jaenesATAC<-import("/Volumes/external.data/MeisterLab/publicData/ATACseq/Jaenes2018_eLife_GSE114494/GSE114439_atac_wt_l3_ce11.bw",
                      selection=grFix)
 
+
   coh1<-import("/Volumes/MeisterLab/publicData/ChIPseq_realigned/modEncode_SMC/chip-seq-pipeline2/bigwig_fc/COH1_fem2_AD_SDQ0809_rep.pooled_x_ctl.pooled.fc.signal.bigwig",
                selection=grFix)
   #GSE50324
 
-  H3K27ac<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/GSM624432_WA30634849_H3K27AC_N2_L3_1_ce11.bw",
+  H3K27ac<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/GSM624432_WA30634849_H3K27AC_N2_L3_1_avr_ce11.bw",
                   selection=grFix)
   #GSM624432
 
@@ -280,9 +283,6 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
   #average of GSM5686812 and GSM5686813
 
   chromDomains<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_liftedOver/Evans2016_PNAS_L3/chromDomains_L3_Evans2016_ce11_rgb.bed")
-
-
-
 
 
   ############ plots -----
@@ -480,7 +480,7 @@ drawGenomicRegion<-function(fountains,fountainIndex,resolution=resolution,
 pdf(paste0(finalFigDir,"/FigS4_EvansDomains_2kb_bins_freq.pdf"),
        width=11,height=19,paper="a4")
 
-pageCreate(width = 18, height = 25, params=params, showGuides=FALSE)
+pageCreate(width = 18, height = 25, default.units="cm",showGuides=FALSE)
 plotGG(plot=p,x=0.5,y=0,width=17,height=10,default.units="cm")
 plotText(label = "c", fontsize = 16, fontface = "bold",
   x = 0.5, y = 10, just = "center", default.units = "cm")

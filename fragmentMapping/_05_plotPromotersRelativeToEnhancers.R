@@ -40,8 +40,8 @@ args=list()
 if (length(args)==0) {
   minDistance=0
   maxDistance=30000 #30000
-  #enhancerSet="jaenes"
-  enhancerSet="daugherty"
+  enhancerSet="jaenes"
+  #enhancerSet="daugherty"
   tssUpstream=100 #300
   tssDownstream=100
   ctrlStrain="366"
@@ -201,7 +201,7 @@ p4
 panelLabels<-if(enhancerSet=="daugherty"){c("a","c","e","g")} else {c("b","d","f","h")}
 p<-ggpubr::ggarrange(p1,p2,p3,p4,nrow=4,ncol=1,heights=c(1,1,1.1,0.9),
                      labels=panelLabels)
-ggsave(paste0(finalFigDir,"/",enhancerSet,"Enhancer_Promoter_contactRatio_",
+ggsave(paste0(finalFigDir,"/FigS9_",enhancerSet,"Enhancer_Promoter_contactRatio_",
             minDistance/1000,"-",maxDistance/1000,"kb_",fragLibs,"_maxK",maxKNN,
             "_prom",tssUpstream,"up",tssDownstream,"down_distanceRank.pdf"),
        p,device="pdf",height=30, width=13, units="cm")
