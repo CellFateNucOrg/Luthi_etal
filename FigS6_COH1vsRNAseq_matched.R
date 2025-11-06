@@ -257,6 +257,6 @@ p7
 p<-ggpubr::ggarrange(p2,ggpubr::ggarrange(p3,p3b,ncol=2,widths=c(1.2,1), labels=c("b ","c ")),
                      ggpubr::ggarrange(p5,p7,ncol=2,widths=c(1,1.2),labels=c("d ","e ")),
                      nrow=3,labels=c("a ","",""))
-p<-annotate_figure(p, top = text_grob("Isiaka et al., Figure S6", size = 12))
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure S6", size = 12))
 ggsave(paste0(finalFigDir,"/FigS6_COH1vsRNAseq_matchedCOH1.pdf"),p,device="pdf",width=18,height=21,units="cm")
 ggsave(paste0(finalFigDir,"/FigS6_COH1vsRNAseq_matchedCOH1.png"),p,device="png",width=18,height=21,units="cm")

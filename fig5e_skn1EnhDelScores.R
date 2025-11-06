@@ -82,28 +82,7 @@ stat.test2
 
 facetlabels=c("no TEV induction", "cohesin<sup>COH-1</sup> cleavage")
 names(facetlabels)=c("Control","Heatshock")
-# p5<-ggplot(asifilt,aes(x=combinedNames,y=intensity_mean)) +
-#   geom_boxplot(outlier.shape=NA,notch=T, fill="grey90") +
-#   facet_wrap(.~HSvNHS,labeller=as_labeller(facetlabels)) +
-#   geom_jitter(color="black",alpha=0.5,size=0.1,width=0.1) +
-#   theme(axis.title.y=element_blank())+
-#   ylab("Mean intensity (A.U.)") +
-#   coord_cartesian(ylim=c(0,2100))+
-#   geom_signif(data=stat.test,
-#               mapping=aes(x=group1,y=intensity_mean,group=HSvNHS),
-#               y_position=1800,
-#               annotations=stat.test$p.pretty,
-#               comparisons=zipup(stat.test$group1,stat.test$group2),
-#               parse=T, size=0.5, textsize=3, tip_length=0.01,colour="purple",
-#               manual=F)+
-#   geom_text(aes(label=nuclei),data=sum.stat,y=300,colour="black",size=3) +
-#   theme(panel.spacing = unit(1.3, "cm"),
-#         strip.text = ggtext::element_markdown()) +
-#   geom_hline(yintercept=sum.stat$avrIntensity[sum.stat$HSvNHS=="Control"& sum.stat$combinedNames==" wt ( wt)"],
-#              color="green")+
-#   geom_hline(yintercept=sum.stat$avrIntensity[sum.stat$HSvNHS=="Heatshock"& sum.stat$combinedNames==" wt ( wt)"],
-#              color="orange")+
-#   coord_flip(clip="off")
+
 
 p5<-ggplot(asifilt,aes(x=combinedNames,y=intensity_mean)) +
   geom_boxplot(outlier.shape=NA,notch=T, fill="grey90") +
@@ -126,8 +105,7 @@ p5<-ggplot(asifilt,aes(x=combinedNames,y=intensity_mean)) +
   geom_hline(yintercept=sum.stat$avrIntensity[sum.stat$HSvNHS=="Control"& sum.stat$combinedNames==" wt\n( wt)"],
              color="green")+
   geom_hline(yintercept=sum.stat$avrIntensity[sum.stat$HSvNHS=="Heatshock"& sum.stat$combinedNames==" wt\n( wt)"],
-             color="orange")#+
-  #coord_flip(clip="off")
+             color="orange")
 p5
 
 stat.test2$intensity_mean<- 100
@@ -138,7 +116,7 @@ p5<-p5+ geom_text(data=stat.test2,mapping=aes(x=combinedNames,y=intensity_mean,l
 p5
 p<-cowplot::plot_grid(p5,labels=c("i "))
 p
-ggsave(paste0(finalFigDir,"/fig4i_skn1enhDelScores.pdf"), p,
+ggsave(paste0(finalFigDir,"/fig4i_skn1enhDelIntensity.pdf"), p,
        device=cairo_pdf,width=16,height=10,units="cm")
 
 
@@ -155,5 +133,5 @@ bartlett.test(intensity_mean ~ combinedNames,
              data=asifilt[asifilt$combinedNames %in% c(" wt ( wt)","1st intronΔ (ubs73)") &
                             asifilt$HSvNHS=="Heatshock",])
 
-## for Kalyan:
+
 

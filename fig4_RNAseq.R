@@ -435,7 +435,7 @@ pnull<-ggplot()
 p<-ggpubr::ggarrange(ggpubr::ggarrange(p1,p2,p3,ncol=3,widths=c(0.5,0.25,0.25), labels=c("a ", "b ", "d ")),
                      ggpubr::ggarrange(plotlist=plotList, labels=c("e "),nrow=1,ncol=6),
                      ,nrow=2, heights=c(1,0.9))
-p<-annotate_figure(p, top = text_grob("Isiaka et al., Figure 4", size = 14))
+p<-annotate_figure(p, top = text_grob("Lüthi et al., Figure 4", size = 14))
 ggsave(paste0(finalFigDir,"/fig4_RNAseq.pdf"), p, device="pdf",
        width=19,height=19, units="cm")
 

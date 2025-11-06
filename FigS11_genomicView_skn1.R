@@ -48,15 +48,15 @@ contacts828<-subsetByOverlaps(cool828,gr)
 ## moving to plotgardener framework
 mat<-data.frame(chr=start(anchors(div_contacts1)$first),chr=start(anchors(div_contacts1)$second),count=scores(div_contacts1)$balanced.l2fc)
 
-## moving to plotgardener framework
-mat366<-data.frame(chr=start(anchors(contacts366)$first),chr=start(anchors(contacts366)$second),count=scores(contacts366)$balanced)
-
-
-## moving to plotgardener framework
-mat828<-data.frame(chr=start(anchors(contacts828)$first),chr=start(anchors(contacts828)$second),count=scores(contacts828)$balanced)
+# ## moving to plotgardener framework
+# mat366<-data.frame(chr=start(anchors(contacts366)$first),chr=start(anchors(contacts366)$second),count=scores(contacts366)$balanced)
+#
+#
+# ## moving to plotgardener framework
+# mat828<-data.frame(chr=start(anchors(contacts828)$first),chr=start(anchors(contacts828)$second),count=scores(contacts828)$balanced)
 
 #change gr to fit hic matrix
-grFix<-GRanges(seqnames=seqnames(gr),ranges=IRanges(start=min(mat366$chr),end=max(mat366$chr.1)))
+grFix<-GRanges(seqnames=seqnames(gr),ranges=IRanges(start=min(mat$chr),end=max(mat$chr.1)))
 seqlevels(grFix)<-seqlevels(Celegans)
 
 daughertyL3<-readRDS(paste0(publicDataDir,"/daugherty2017_L3Enhancers_ce11.rds"))
@@ -86,13 +86,14 @@ chromDomains<-import("/Volumes/external.data/MeisterLab/publicData/ChIPseq_lifte
 
 deletions <- import(paste0(fountainsDir,"/ubs_deletion.bed"))
 deletions$name<-gsub("_deletion","",deletions$name)
+deletions<-deletions[4:7]
 
 arcC <- import("/Volumes/MeisterLab/publicData/InteractionData/Huang-Ahringer_ARC-C_GSE144673/Huang_skn1SignificantInteractions.bedpe")
 arcCgi<-makeGInteractionsFromGRangesPairs(arcC)
 
 ############ plots -----
 
-pdf(file=paste0(finalFigDir,"/supplFig_genomicView_skn1deletions_366.pdf"),width=18,height=29,paper="a4")
+pdf(file=paste0(finalFigDir,"/FigS11_genomicView_skn1deletions.pdf"),width=18,height=29,paper="a4")
 
 params <- pgParams(
   chrom = as.character(seqnames(grFix)), chromstart = start(grFix), chromend = end(grFix),
@@ -128,16 +129,16 @@ chipBin=200
 currentHeight=0
 pageCreate(width = 18, height = 29, params=params, showGuides=FALSE)
 
-plotText(label = "Isiaka et al., Supl. Figure", fontcolor = "black",
+plotText(label = "Lüthi et al., Figure S11", fontcolor = "black",
          y = currentHeight+1, params=params, x=9, font=14)
 
 currentHeight<-currentHeight+2
 
 hicPlot<-plotHicTriangle(
-  data = mat366,
+  data = mat,
   params=params,
   palette=colorRampPalette(rev(brewer.pal(n = 9, "RdBu"))),
-  zrange=c(1e-3,5e-2),
+  zrange=c(-1,1),#c(1e-3,5e-2),
   y = currentHeight, width =17, height=hicHeight,
   colorTrans="linear"
 )
@@ -296,19 +297,19 @@ currentHeight<-currentHeight + 0.5
 
 
 skn1Plot<-plotHicTriangle(
-  data = mat366,
+  data = mat,
   params=skn1params,
   palette=colorRampPalette(rev(brewer.pal(n = 9, "RdBu"))),
-  zrange=c(1e-3,5e-2),
+  zrange=c(-1,1),#c(1e-3,5e-2),
   y = currentHeight, height=hicHeight-2,
   colorTrans="linear"
 )
 
 nhr46Plot<-plotHicTriangle(
-  data = mat366,
+  data = mat,
   params=nhr46params,
   palette=colorRampPalette(rev(brewer.pal(n = 9, "RdBu"))),
-  zrange=c(1e-3,5e-2),,
+  zrange=c(-1,1),#c(1e-3,5e-2),,
   y = currentHeight, height=hicHeight-2,
   colorTrans="linear"
 )
@@ -479,35 +480,29 @@ currentHeight<-currentHeight + signalHeight
 
 skn1Plot<-plotRanges(deletions,
               params=skn1params,
-              y = currentHeight, height=rangesHeight*3,
+              y = currentHeight+rangesHeight*0.9, height=rangesHeight*0.9,
               spaceHeight=0.1,spaceWidth=0,
-              boxHeight=boxHeight,
+              boxHeight=boxHeight*0.8,
               fill="black")
 nhr46Plot<-plotRanges(deletions,
                      params=nhr46params,
-                     y = currentHeight, height=rangesHeight*3,
+                     y = currentHeight+rangesHeight*0.9, height=rangesHeight*0.9,
                      spaceHeight=0.1,spaceWidth=0,
                      boxHeight=boxHeight,
                      fill="black")
 plotText(label = "deletions", fontcolor = "black",
          y = currentHeight+0.1, params=skn1params)
-plotText(label=sort(deletions)$name[1],y = currentHeight+rangesHeight*2+0.1,x=2.6,
-         fontcolor="black",params=skn1params)
-plotText(label=sort(deletions)$name[2],y = currentHeight+rangesHeight*2+0.1,x=5.5,
-         fontcolor="black",params=skn1params)
-plotText(label=sort(deletions)$name[3],y = currentHeight+rangesHeight*1+0.1,x=5.5,
-         fontcolor="black",params=skn1params)
-plotText(label=sort(deletions)$name[4],y = currentHeight+0.2,x=5,
-         fontcolor="black",params=skn1params)
-plotText(label=sort(deletions)$name[5],y = currentHeight+rangesHeight*2+0.1,x=8,
-         fontcolor="black",params=skn1params)
-plotText(label=sort(deletions)$name[6],y = currentHeight+rangesHeight*1+0.1,x=8,
-         fontcolor="black",params=skn1params)
+plotText(label=sort(deletions)$name[1],y = currentHeight+rangesHeight*1+0.1,x=2.6,
+         fontcolor="black",params=skn1params, fontface="italic")
+plotText(label=sort(deletions)$name[2],y = currentHeight+rangesHeight*1+0.1,x=5.5,
+         fontcolor="black",params=skn1params, fontface="italic")
+plotText(label=sort(deletions)$name[3],y = currentHeight+rangesHeight*1+0.1,x=8,
+         fontcolor="black",params=skn1params, fontface="italic")
+plotText(label=sort(deletions)$name[4],y = currentHeight+0.1,x=13.5,
+         fontcolor="black",params=skn1params, fontface="italic")
 
-plotText(label=sort(deletions)$name[7],y = currentHeight+rangesHeight*1+0.1,x=13.5,
-         fontcolor="black",params=nhr46params)
 
-currentHeight<-currentHeight+rangesHeight*3+0.1
+currentHeight<-currentHeight+rangesHeight*1+0.2
 
 skn1Plot<-plotTranscripts(params=skn1params,
                    y=currentHeight, height=transcriptHeight, labels="gene",
@@ -517,7 +512,7 @@ nhr46Plot<-plotTranscripts(params=nhr46params,
                           fontsize=9)
 currentHeight<-currentHeight + transcriptHeight + 0.1
 
-reducedDel<-reduce(deletions)
+reducedDel<-GenomicRanges::reduce(deletions)
 for(j in 1:length(reducedDel)){
   if(start(reducedDel[j])<end(skn1zoom)){
     annoHighlight(
