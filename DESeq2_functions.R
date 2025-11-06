@@ -886,7 +886,7 @@ removeOscillating<-function(dds,remove="either"){
 #' @param metadata GRanges object
 #' @return GRanges object with genes tagged by oscillating info
 #' @export
-tagOscillating<-function(metadata){
+tagOscillating<-function(metadata,outPath="."){
   if(!file.exists(paste0(outPath,"/publicData/oscillatingGenes_latorre.tsv")) |
      !file.exists(paste0(outPath,"/publicData/oscillatingGenes_Meeuse.tsv"))){
     source("./processPublished.R")
