@@ -15,7 +15,7 @@ publicDataDir=paste0(projectDir,"/publicData")
 finalFigDir=paste0(projectDir,"/finalFigures")
 fountainFigDir=paste0(projectDir,"/fountainFigures")
 
-fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125.rds"))
+fountains<-readRDS(paste0(fountainsDir,"/fountains_base0_uncorrected_20240125c.rds"))
 seqlevels(fountains)<-seqlevels(Celegans)
 
 resolution=2000

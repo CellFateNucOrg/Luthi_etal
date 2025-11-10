@@ -85,8 +85,9 @@ dataset<-"240411"
 # dataset<-"240515"
 # dataset<-"240516"
 
-base_path<-paste0("/Volumes/external.data/MeisterLab/pmeister/skn-1_deletions/",dataset,"_skn-1_deletions/")
-datafile<-read.csv(list.files(paste0(base_path, "/imageStats/"), pattern="^allImageStats.*\\.csv$",full.names=T))
+#base_path<-paste0("/Volumes/external.data/MeisterLab/pmeister/skn-1_deletions/",dataset,"_skn-1_deletions/")
+base_path<-paste0(projectDir,"/skn1ImageAnalysis")
+datafile<-read.csv(list.files(paste0(base_path, "/imageStats/",dataset), pattern="^allImageStats.*\\.csv$",full.names=T))
 
 
 # combine scores
