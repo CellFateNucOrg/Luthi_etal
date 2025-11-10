@@ -20,3 +20,4 @@ Scripts for HiC fragment-level mapping (FigS9) can be found in fragmentMapping d
 
 Some additional data files for plotting are available in ./fountains and ./publicData directories. Some datafiles were not included as they were too large, and can be obtained upon request.
 
+Scripts for quantifying ASI neuron images as well as generating unlabelled images for blind scoring are in ./skn1ImageAnalysis folder. ASI signal intensity results in are ./imageStats subfolder and blind scoring of ASI phenotype is in ./scoring folder.
