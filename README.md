@@ -2,10 +2,11 @@
 
 Sripts for figures for:
 
-*Cohesin forms fountains at active enhancers in C. elegans*
-**Bolaji N. Lüthi, Jennifer I. Semple, Anja Haemmerli, Saurabh Thapliyal, Kalyan Ghadage, Klement Stojanovski, Dario D’Asaro, Moushumi Das, Nick Gilbert, Dominique A. Glauser, Benjamin Towbin, Daniel Jost, Peter Meister
-bioRxiv 2023.07.14.549011; doi: https://doi.org/10.1101/2023.07.14.549011**
-[accepted for Nature Communications]
+**Cohesin forms fountains at active enhancers in C. elegans**
+*Bolaji N. Lüthi, Jennifer I. Semple, Anja Haemmerli, Saurabh Thapliyal, Kalyan Ghadage, Klement Stojanovski, Dario D’Asaro, Moushumi Das, Nick Gilbert, Dominique A. Glauser, Benjamin Towbin, Daniel Jost, Peter Meister
+bioRxiv 2023.07.14.549011; doi: https://doi.org/10.1101/2023.07.14.549011*
+
+[now accepted for Nature Communications]
 
 Initial processing of the data was performed with scripts in https://github.com/CellFateNucOrg/Bolaji_Luthi_RNAseq
 
